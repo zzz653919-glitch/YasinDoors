@@ -319,6 +319,45 @@ section{ padding:100px 0; position:relative; }
 }
 .finish-code{ color:var(--muted); font-size:0.82rem; }
 
+/* ---------- Standart o'lcham tugmalari (buyurtma formasi) ---------- */
+.size-btn-row{ display:flex; flex-wrap:wrap; gap:10px; }
+.size-btn{
+  position:relative;
+  flex:1 1 auto;
+  min-width:112px;
+  padding:12px 14px;
+  background:var(--bg);
+  border:1px solid var(--line);
+  border-radius:2px;
+  color:var(--cream);
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.86rem;
+  text-align:center;
+  cursor:pointer;
+  transition: border-color .2s, color .2s, background-color .2s;
+}
+.size-btn:hover{ border-color:var(--brass); color:var(--brass); }
+.size-btn.active{
+  border-color:var(--brass);
+  background:rgba(201,164,76,0.12);
+  color:var(--brass);
+  font-weight:700;
+}
+.size-btn-tag{
+  display:block;
+  font-family:'Manrope',sans-serif;
+  font-size:0.6rem;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--muted);
+  margin-top:3px;
+}
+.size-btn.active .size-btn-tag{ color:var(--brass); }
+@media (max-width:575.98px){
+  .size-btn{ min-width:0; flex:1 1 30%; padding:10px 6px; font-size:0.76rem; }
+}
+
 /* process */
 .process-row{
   display:flex;

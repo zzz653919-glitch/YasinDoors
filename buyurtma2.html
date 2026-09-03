@@ -264,11 +264,11 @@
                 </div>
                 <div class="col-12">
                   <label class="form-label" style="color:var(--muted); font-size:0.85rem;">O'lcham</label>
-                  <select id="ordSize" class="form-control form-control-custom">
-                    <option value="700 × 2000 mm">700 × 2000 mm</option>
-                    <option value="800 × 2000 mm" selected>800 × 2000 mm (standart)</option>
-                    <option value="900 × 2000 mm">900 × 2000 mm</option>
-                  </select>
+                  <div class="size-btn-row" id="sizeBtnRow">
+                    <button type="button" class="size-btn" data-size="700 × 2000 mm">700 × 2000 mm</button>
+                    <button type="button" class="size-btn active" data-size="800 × 2000 mm">800 × 2000 mm<span class="size-btn-tag">Standart</span></button>
+                    <button type="button" class="size-btn" data-size="900 × 2000 mm">900 × 2000 mm</button>
+                  </div>
                 </div>
               </div>
             </form>
@@ -478,19 +478,43 @@
     renderModel(this.value);
   });
 
-  // ---------- O'lcham tanlash ----------
-  var sizeSelect = document.getElementById('ordSize');
+  // ---------- O'lcham tugmalari ----------
+  var sizeBtns = document.querySelectorAll('.size-btn');
   var ordSizeViewEl = document.getElementById('ordSizeView');
-  if (sizeSelect && ordSizeViewEl) {
-    ordSizeViewEl.textContent = sizeSelect.value;
-    sizeSelect.addEventListener('change', function () {
-      ordSizeViewEl.textContent = sizeSelect.value;
-    });
+  function setSize(val) {
+    sizeBtns.forEach(function (b) { b.classList.toggle('active', b.dataset.size === val); });
+    if (ordSizeViewEl) ordSizeViewEl.textContent = val;
   }
+  sizeBtns.forEach(function (b) {
+    b.addEventListener('click', function () { setSize(b.dataset.size); });
+  });
 
   // ---------- Forma yuborilganda ----------
   document.getElementById('orderForm').addEventListener('submit', function (e) {
     e.preventDefault();
+
+    // Yetkazib berish manzili to'liq kiritilmagan bo'lsa, buyurtma yuborilmaydi
+    var addrRegionVal = (document.getElementById('addrRegion') || {}).value || '';
+    var addrMahallaVal = (document.getElementById('addrMahalla') || {}).value || '';
+    var addrStreetVal = (document.getElementById('addrStreet') || {}).value || '';
+    var addrHouseVal = (document.getElementById('addrHouse') || {}).value || '';
+    var missingAddrFields = [];
+    if (!addrRegionVal.trim()) missingAddrFields.push('Viloyat');
+    if (!addrMahallaVal.trim()) missingAddrFields.push('Mahalla');
+    if (!addrStreetVal.trim()) missingAddrFields.push('Ko\'cha');
+    if (!addrHouseVal.trim()) missingAddrFields.push('Xonadon / Uy');
+
+    var addressErrorEl = document.getElementById('addressError');
+    if (missingAddrFields.length) {
+      if (addressErrorEl) {
+        addressErrorEl.classList.add('show');
+        addressErrorEl.innerHTML = '✕ Buyurtma berish uchun avval yetkazib berish manzilini to\'liq kiriting. Quyidagi maydon' +
+          (missingAddrFields.length > 1 ? 'lar' : '') + ' to\'ldirilmagan: <b>' + missingAddrFields.join(', ') + '</b>.';
+        addressErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
     document.getElementById('formState').style.display = 'none';
     document.getElementById('successBox').classList.add('show');
     var mobBar = document.getElementById('mobileOrderBar');
