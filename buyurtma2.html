@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark" data-page="buyurtma">
+<head>
+<meta charset="UTF-8">
+<script>
+(function () {
+  var isMobile = /Android|iPhone|iPod|Mobile|Windows Phone/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  var map = { index: ['index.html', 'index2.html'], katalog: ['katalog.html', 'katalog2.html'], buyurtma: ['buyurtma.html', 'buyurtma2.html'] };
+  var page = document.documentElement.getAttribute('data-page');
+  if (!page || !map[page]) return;
+  var target = isMobile ? map[page][1] : map[page][0];
+  var raw = location.pathname.split('/').pop();
+  var current = raw === '' ? 'index.html' : raw;
+  if (current !== target) {
+    location.replace(target + location.search + location.hash);
+  }
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buyurtma berish — YasinDoors</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./mobile-market.css">
+<style>
+  .delivery-map-inner{ margin-top:0; }
+  .delivery-map-container{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+  .map-toolbar{ display:flex; justify-content:flex-end; margin-bottom:10px; }
+  #deliveryMap{
+    height:360px;
+    border:1px solid var(--line);
+    border-radius:2px;
+    z-index:0;
+    background:var(--surface-2);
+  }
+  .map-fs-btn{
+    position:static;
+    min-width:38px; height:38px; padding:0 14px; border-radius:4px;
+    border:1px solid var(--line); background:var(--surface); color:var(--cream);
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    cursor:pointer; font-size:0.82rem; font-weight:600; letter-spacing:0.01em;
+    transition: border-color .2s, color .2s;
+  }
+  .map-fs-btn:hover{ border-color:var(--brass); color:var(--brass); }
+  .delivery-map-container.map-fullscreen-active{
+    position:fixed; inset:0; z-index:2000;
+    background:var(--bg); padding:16px;
+  }
+  .delivery-map-container.map-fullscreen-active #deliveryMap{
+    flex:1;
+    height:auto;
+    border-radius:0;
+  }
+  body.map-fullscreen-lock{ overflow:hidden; }
+  .address-fields label{ color:var(--muted); font-size:0.8rem; display:block; margin-bottom:6px; }
+  .address-fields .form-control-custom[readonly]{ opacity:0.85; cursor:not-allowed; }
+  .address-fields select.form-control-custom{
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="9" viewBox="0 0 14 9"><path d="M1 1l6 6 6-6" fill="none" stroke="%23c9a44c" stroke-width="1.6"/></svg>');
+    background-repeat:no-repeat;
+    background-position:right 14px center;
+    padding-right:36px;
+  }
+  .address-error{
+    display:none;
+    margin-top:14px;
+    padding:14px 18px;
+    border-radius:2px;
+    font-size:0.9rem;
+    line-height:1.6;
+    background:rgba(224,96,96,0.12);
+    color:#e06060;
+    border:1px solid rgba(224,96,96,0.35);
+  }
+  .address-error.show{ display:block; }
+  .address-error b{ color:#ff8a8a; }
+  #addrSearchBtn{
+    background:transparent;
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    color:var(--brass);
+    font-weight:700;
+  }
+  #addrSearchBtn:hover{ background:rgba(201,164,76,0.08); }
+  #addrSearchBtn:disabled{ opacity:0.6; cursor:not-allowed; }
+  .delivery-address{
+    display:none;
+    margin-top:12px;
+    padding:12px 16px;
+    border-radius:2px;
+    font-size:0.88rem;
+    color:var(--cream);
+    background:var(--surface-2);
+    border:1px solid var(--line);
+  }
+  .delivery-address.show{ display:block; }
+  .delivery-address b{ color:var(--brass); }
+  .delivery-status{
+    margin-top:18px;
+    padding:14px 18px;
+    border-radius:2px;
+    font-size:0.94rem;
+    font-weight:600;
+    display:none;
+  }
+  .delivery-status.show{ display:block; }
+  .delivery-status.ok{
+    background:rgba(124,197,118,0.12);
+    color:#7cc576;
+    border:1px solid rgba(124,197,118,0.35);
+  }
+  .delivery-status.fail{
+    background:rgba(224,96,96,0.12);
+    color:#e06060;
+    border:1px solid rgba(224,96,96,0.35);
+  }
+  .order-wrap{ padding:170px 0 110px; min-height:100vh; }
+  .order-summary{
+    background:var(--surface); border:1px solid var(--line); border-radius:2px;
+    padding:32px; position:sticky; top:110px;
+  }
+  .order-summary .model-thumb{ height:200px; margin-bottom:20px; }
+  .order-summary h3{ font-size:1.3rem; color:var(--cream); margin-bottom:6px; }
+  .order-summary .price{ font-family:'JetBrains Mono',monospace; color:var(--brass); font-size:1.1rem; }
+  .success-box{
+    display:none; text-align:center; padding:60px 20px;
+    background:var(--surface); border:1px solid var(--line); border-radius:2px;
+  }
+  .success-box.show{ display:block; }
+  .success-box .tick{
+    width:64px; height:64px; border-radius:50%; background:var(--lime-dim, rgba(201,164,76,0.15));
+    display:flex; align-items:center; justify-content:center; margin:0 auto 20px;
+    color:var(--brass);
+  }
+  .qty-row{ display:flex; align-items:center; justify-content:space-between; }
+  .qty-row .k{ font-size:0.8rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); }
+  .qty-control{ display:flex; align-items:center; gap:14px; }
+  .qty-btn{
+    width:34px; height:34px; border-radius:50%; border:1px solid var(--line);
+    background:transparent; color:var(--cream); font-size:1.2rem; line-height:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition: border-color .2s, color .2s, transform .15s;
+  }
+  .qty-btn:hover{ border-color:var(--brass); color:var(--brass); }
+  .qty-btn:active{ transform:scale(0.92); }
+  .qty-value{ min-width:24px; text-align:center; font-family:'JetBrains Mono',monospace; font-size:1.05rem; color:var(--cream); }
+
+  /* ---------- Responsiv: buyurtma sahifasi kichik ekranlarda ---------- */
+  @media (max-width: 991.98px){
+    .order-wrap{ padding:150px 0 70px; }
+    .order-summary{ position:static; top:auto; margin-top:8px; }
+  }
+  @media (max-width: 767.98px){
+    .contact-panel, .order-summary{ padding:22px; }
+    #deliveryMap{ height:300px; }
+  }
+  @media (max-width: 575.98px){
+    .order-wrap{ padding:118px 0 90px; }
+    #deliveryMap{ height:260px; }
+    .qty-row{ flex-wrap:wrap; gap:10px; }
+    .address-fields .col-6{ flex:0 0 100%; max-width:100%; }
+    .map-fs-btn{ font-size:0.78rem; padding:0 10px; }
+    .success-box{ padding:44px 16px; }
+    .order-summary .model-thumb{ height:150px; }
+  }
+
+  /* ---------- Mobilda pastda "yopishqoq" buyurtma tugmasi ---------- */
+  .mobile-order-bar{ display:none; }
+  @media (max-width: 575.98px){
+    .mobile-order-bar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      position:fixed;
+      left:0; right:0; bottom:0;
+      z-index:900;
+      padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+      background:var(--surface);
+      border-top:1px solid var(--line);
+      box-shadow:0 -8px 24px rgba(0,0,0,0.35);
+    }
+    .mobile-order-bar .mob-total-lbl{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); }
+    .mobile-order-bar .mob-total-val{ font-family:'JetBrains Mono',monospace; color:var(--brass); font-size:1.02rem; }
+    .mobile-order-bar button{ flex-shrink:0; padding:12px 20px; font-size:0.86rem; }
+    body{ padding-bottom:74px; }
+    .float-contact{ bottom:calc(86px + env(safe-area-inset-bottom)); }
+  }
+</style>
+</head>
+<body class="mp-shell mp-order">
+
+<!-- TOP BAR -->
+<div class="mp-topbar">
+  <a class="mp-back" href="katalog2.html">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    <span>Buyurtma berish</span>
+  </a>
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Rangni almashtirish">
+    <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4.5"/>
+      <path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/>
+    </svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/>
+    </svg>
+  </button>
+</div>
+
+<section class="order-wrap">
+  <div class="container">
+    <div class="eyebrow mb-3">
+      <a href="katalog2.html" style="color:var(--muted); text-decoration:none;">Katalog</a>&nbsp;/&nbsp;Buyurtma berish
+    </div>
+
+    <div id="formState">
+      <h1 class="mb-3" style="font-size:clamp(2rem,4vw,2.8rem);">Buyurtmangizni rasmiylashtiring</h1>
+      <p class="lead-text mb-5" style="max-width:600px;">Quyidagi formani to'ldiring — mutaxassisimiz 10 daqiqa
+        ichida siz bilan bog'lanib, o'lchov va yetkazib berish vaqtini kelishib oladi.</p>
+
+      <div class="row g-5">
+        <div class="col-lg-7">
+          <div class="contact-panel">
+            <form id="orderForm">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Ismingiz</label>
+                  <input type="text" id="ordName" class="form-control form-control-custom" placeholder="Ismingizni kiriting" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Telefon raqam</label>
+                  <input type="tel" id="ordPhone" class="form-control form-control-custom" placeholder="+998 __ ___ __ __" required>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Model</label>
+                  <select id="ordModel" class="form-control form-control-custom">
+                    <option>Buxoro</option>
+                    <option>Registon</option>
+                    <option>Xiva</option>
+                    <option>Chorsu</option>
+                    <option>Samarqand</option>
+                    <option>Farg'ona</option>
+                    <option>Andijon</option>
+                    <option>Namangan</option>
+                    <option>Nukus</option>
+                    <option>Termiz</option>
+                    <option>Qo'qon</option>
+                    <option>Jizzax</option>
+                    <option>Guliston</option>
+                    <option>Navoiy</option>
+                    <option>Urganch</option>
+                    <option>Denov</option>
+                    <option>Marg'ilon</option>
+                    <option>Shahrisabz</option>
+                    <option>Hali aniqlanmagan</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" style="color:var(--muted); font-size:0.85rem;">O'lcham</label>
+                  <select id="ordSize" class="form-control form-control-custom">
+                    <option value="700 × 2000 mm">700 × 2000 mm</option>
+                    <option value="800 × 2000 mm" selected>800 × 2000 mm (standart)</option>
+                    <option value="900 × 2000 mm">900 × 2000 mm</option>
+                  </select>
+                </div>
+              </div>
+            </form>
+
+            <div class="delivery-map-inner">
+              <hr style="border-color:var(--line); margin:32px 0 24px;">
+              <div class="eyebrow mb-3">Yetkazib berish hududi</div>
+              <p class="section-sub mb-3" style="font-size:0.92rem;">Xaritani kattalashtirib, ko'cha va uylar
+                darajasigacha yaqinlashing, so'ng aniq manzilingizni bosib belgilang. Biz hozircha
+                faqat <b>Toshkent, Sirdaryo, Samarqand, Navoiy, Qashqadaryo</b> va <b>Jizzax</b> viloyatlariga yetkazib
+                beramiz (ranglangan hududlar).</p>
+
+              <div class="delivery-map-container" id="deliveryMapContainer">
+                <div class="map-toolbar">
+                  <button type="button" id="mapFullscreenBtn" class="map-fs-btn">⛶ To'liq ekran</button>
+                </div>
+                <div id="deliveryMap"></div>
+              </div>
+              <div class="delivery-status" id="deliveryStatus"></div>
+              <div class="delivery-address" id="deliveryAddress"></div>
+
+              <div class="address-fields row g-3 mt-3">
+                <div class="col-md-3 col-6">
+                  <label>Viloyat</label>
+                  <select id="addrRegion" class="form-control form-control-custom">
+                    <option value="">Tanlang</option>
+                    <option value="Toshkent viloyati">Toshkent viloyati</option>
+                    <option value="Sirdaryo viloyati">Sirdaryo viloyati</option>
+                    <option value="Samarqand viloyati">Samarqand viloyati</option>
+                    <option value="Navoiy viloyati">Navoiy viloyati</option>
+                    <option value="Qashqadaryo viloyati">Qashqadaryo viloyati</option>
+                    <option value="Jizzax viloyati">Jizzax viloyati</option>
+                  </select>
+                </div>
+                <div class="col-md-3 col-6">
+                  <label>Mahalla</label>
+                  <input type="text" id="addrMahalla" class="form-control form-control-custom" placeholder="Mahalla nomi">
+                </div>
+                <div class="col-md-3 col-6">
+                  <label>Ko'cha</label>
+                  <input type="text" id="addrStreet" class="form-control form-control-custom" placeholder="Ko'cha nomi">
+                </div>
+                <div class="col-md-3 col-6">
+                  <label>Xonadon / Uy</label>
+                  <input type="text" id="addrHouse" class="form-control form-control-custom" placeholder="Uy yoki xonadon raqami">
+                </div>
+              </div>
+
+              <button type="button" id="addrSearchBtn" class="btn-outline-cream w-100 mt-3">🔍 Manzilni xaritadan qidirish</button>
+              <div class="address-error" id="addressError"></div>
+
+              <button type="submit" form="orderForm" class="btn-brass w-100 mt-4">Buyurtmani jo'natish</button>
+              <p class="text-center mt-3 mb-0" style="color:var(--muted); font-size:0.88rem;">
+                Biror bir savolingiz bo'lsa <a href="tel:+998933002020" style="color:var(--brass); font-weight:600;">93 300 20 20</a> raqamiga telefon qiling
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="order-summary">
+            <div class="model-thumb" id="ordThumb">
+              <svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#7a4a20"/><rect x="26" y="26" width="68" height="70" fill="#5f3a19"/><rect x="26" y="104" width="68" height="96" fill="#5f3a19"/></svg>
+            </div>
+            <div class="mtag" id="ordSeries">Klassik seriya</div>
+            <h3 id="ordName2">Buxoro</h3>
+            <p style="color:var(--muted); font-size:0.9rem; margin-bottom:16px;" id="ordDesc">An'anaviy islimi naqshli, ikki panelli og'ir eshik.</p>
+            <div class="price" id="ordPrice">2 450 000 so'm</div>
+
+            <a href="katalog2.html" class="btn-outline-cream w-100 text-center mt-3" style="display:block;">Modelni o'zgartirish</a>
+
+            <hr style="border-color:var(--line); margin:20px 0;">
+
+            <div class="qty-row">
+              <div class="k">Miqdor</div>
+              <div class="qty-control">
+                <button type="button" class="qty-btn" id="qtyMinus" aria-label="Kamaytirish">−</button>
+                <span class="qty-value" id="qtyValue">1</span>
+                <button type="button" class="qty-btn" id="qtyPlus" aria-label="Ko'paytirish">+</button>
+              </div>
+            </div>
+
+            <div class="info-line" style="margin-top:16px;"><div class="k">Jami</div><div class="v" id="ordTotal">2 450 000 so'm</div></div>
+
+            <hr style="border-color:var(--line); margin:20px 0;">
+            <div class="info-line"><div class="k">O'lcham</div><div class="v" id="ordSizeView">800 × 2000 mm</div></div>
+            <div class="info-line"><div class="k">Kafolat</div><div class="v">5 yil</div></div>
+            <div class="info-line"><div class="k">Muddat</div><div class="v">7–10 kun</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="success-box" id="successBox">
+      <div class="tick">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <h2 style="font-size:1.6rem; margin-bottom:10px;">Buyurtmangiz qabul qilindi!</h2>
+      <p style="color:var(--muted); max-width:460px; margin:0 auto 28px;">Tez orada mutaxassisimiz siz bilan
+        bog'lanadi. E'tiboringiz uchun rahmat.</p>
+      <a href="index2.html" class="btn-brass">Bosh sahifaga qaytish</a>
+    </div>
+
+    <div class="mobile-order-bar" id="mobileOrderBar">
+      <div>
+        <div class="mob-total-lbl">Jami</div>
+        <div class="mob-total-val" id="ordTotalMobile">2 450 000 so'm</div>
+      </div>
+      <button type="submit" form="orderForm" class="btn-brass">Jo'natish</button>
+    </div>
+
+  </div>
+</section>
+
+<a href="https://t.me/+998933002020" target="_blank" rel="noopener" class="float-contact" aria-label="Telegram orqali yozing">
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M22 3L2.5 10.7c-.7.3-.7 1.3.1 1.5l4.9 1.5 1.9 6.1c.2.7 1.1.9 1.6.3l2.7-3 5 3.7c.6.5 1.5.1 1.7-.6L23.9 4c.2-.8-.6-1.4-1.9-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M7.5 13.7l10-7.2-8 8.4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  </svg>
+  <span class="float-ping"></span>
+</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="./java.js"></script>
+<script>
+  // ---------- Modelga oid ma'lumotlar bazasi ----------
+  var MODELS = {
+    "Buxoro":      { series:"Klassik seriya",  price:"2 450 000 so'm", desc:"An'anaviy islimi naqshli, ikki panelli og'ir eshik.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#7a4a20"/><rect x="26" y="26" width="68" height="70" fill="#5f3a19"/><rect x="26" y="104" width="68" height="96" fill="#5f3a19"/></svg>' },
+    "Registon":    { series:"Minimal seriya",  price:"1 980 000 so'm", desc:"Naqshsiz, sof geometriya — zamonaviy interyer uchun.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#2a221b"/><rect x="26" y="26" width="68" height="174" fill="#1c1712" stroke="#c9a44c" stroke-width="1"/></svg>' },
+    "Xiva":        { series:"Naqshkor seriya", price:"2 890 000 so'm", desc:"Girih uslubidagi geometrik naqsh, kumush rangli metall ilgak bilan.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#8a5a2c"/><circle cx="60" cy="60" r="22" fill="none" stroke="#c9a44c" stroke-width="2"/><circle cx="60" cy="150" r="22" fill="none" stroke="#c9a44c" stroke-width="2"/></svg>' },
+    "Chorsu":      { series:"Zamonaviy seriya",price:"2 150 000 so'm", desc:"Vertikal chiziqli panel, keng ofis va ish xonalari uchun.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#3a2f27"/><rect x="26" y="26" width="30" height="174" fill="#241c16"/><rect x="64" y="26" width="30" height="174" fill="#241c16"/></svg>' },
+    "Samarqand":   { series:"Klassik seriya",  price:"2 690 000 so'm", desc:"Nafis o'simliksimon naqsh, mehmonxona eshiklari uchun ideal.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#5f3a19"/><path d="M60 30 C80 50 80 80 60 100 C40 80 40 50 60 30Z" fill="none" stroke="#c9a44c" stroke-width="2"/><path d="M60 100 C80 120 80 150 60 170 C40 150 40 120 60 100Z" fill="none" stroke="#c9a44c" stroke-width="2"/></svg>' },
+    "Farg'ona":    { series:"Minimal seriya",  price:"2 040 000 so'm", desc:"Oq laminatli, yorug' va keng ko'rinishdagi zamonaviy dizayn.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#efe9da" stroke="#a89a8a" stroke-width="1"/><rect x="26" y="26" width="68" height="70" fill="#e2dac8"/><rect x="26" y="104" width="68" height="96" fill="#e2dac8"/></svg>' },
+    "Andijon":     { series:"Klassik seriya",  price:"2 320 000 so'm", desc:"To'rt qatorli panel tuzilmasi, an'anaviy uy eshiklari uchun.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#4a3320"/><rect x="26" y="26" width="68" height="42" fill="#332211"/><rect x="26" y="76" width="68" height="42" fill="#332211"/><rect x="26" y="126" width="68" height="42" fill="#332211"/><rect x="26" y="176" width="68" height="24" fill="#332211"/></svg>' },
+    "Namangan":    { series:"Minimal seriya",  price:"1 890 000 so'm", desc:"Kul rang laminat, aniq geometrik chiziqlar bilan.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#6b6560"/><rect x="26" y="26" width="68" height="174" fill="none" stroke="#c9a44c" stroke-width="1.5"/><line x1="60" y1="26" x2="60" y2="200" stroke="#c9a44c" stroke-width="1"/></svg>' },
+    "Nukus":       { series:"Naqshkor seriya", price:"2 760 000 so'm", desc:"Romb shaklidagi girih naqsh, orasida oltin chiziq bilan.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#8a5a2c"/><path d="M60 40 L80 70 L60 100 L40 70 Z" fill="none" stroke="#c9a44c" stroke-width="2"/><path d="M60 120 L80 150 L60 180 L40 150 Z" fill="none" stroke="#c9a44c" stroke-width="2"/></svg>' },
+    "Termiz":      { series:"Zamonaviy seriya",price:"2 480 000 so'm", desc:"Qora mat laminat, oltin dumaloq tutqich bilan minimalistik uslub.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#1c1712"/><rect x="26" y="26" width="68" height="174" fill="#100d0a" stroke="#c9a44c" stroke-width="1"/><circle cx="60" cy="113" r="4" fill="#c9a44c"/></svg>' },
+    "Qo'qon":      { series:"Klassik seriya",  price:"2 580 000 so'm", desc:"Eman laminat, pastki qismida doiraviy naqsh bezagi bilan.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#c99a52"/><rect x="26" y="26" width="68" height="70" fill="#a67a38"/><circle cx="60" cy="140" r="30" fill="none" stroke="#3a2410" stroke-width="2"/></svg>' },
+    "Jizzax":      { series:"Minimal seriya",  price:"2 260 000 so'm", desc:"Venge rangli, tepa va pastda nafis egri chiziqlar bilan.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#5b3a24"/><rect x="26" y="26" width="68" height="174" fill="none" stroke="#c9a44c" stroke-width="1"/><path d="M40 60 Q60 40 80 60" fill="none" stroke="#c9a44c" stroke-width="1.5"/><path d="M40 166 Q60 186 80 166" fill="none" stroke="#c9a44c" stroke-width="1.5"/></svg>' },
+    "Guliston":    { series:"Zamonaviy seriya",price:"2 010 000 so'm", desc:"Ikki kvadrat oyna shaklidagi naqsh, minimalistik ofis eshiklari uchun.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#3a2f27"/><rect x="26" y="26" width="68" height="174" fill="none" stroke="#c9a44c" stroke-width="1"/><rect x="40" y="44" width="40" height="40" fill="none" stroke="#c9a44c" stroke-width="1.2"/><rect x="40" y="136" width="40" height="40" fill="none" stroke="#c9a44c" stroke-width="1.2"/></svg>' },
+    "Navoiy":      { series:"Minimal seriya",  price:"2 120 000 so'm", desc:"Oq laminat, ikkita nafis doira konturi bilan bezatilgan.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#efe9da" stroke="#a89a8a" stroke-width="1"/><circle cx="60" cy="70" r="24" fill="none" stroke="#8a5a2c" stroke-width="1.4"/><circle cx="60" cy="150" r="24" fill="none" stroke="#8a5a2c" stroke-width="1.4"/></svg>' },
+    "Urganch":     { series:"Klassik seriya",  price:"2 540 000 so'm", desc:"Ikki panelli, markazida bronza rangli medalyon bezak bilan.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#7a4a20"/><path d="M30 40 L90 40 L90 100 L30 100 Z M30 120 L90 120 L90 200 L30 200 Z" fill="none" stroke="#c9a44c" stroke-width="1.4"/><circle cx="60" cy="70" r="8" fill="#c9a44c"/></svg>' },
+    "Denov":       { series:"Zamonaviy seriya",price:"1 950 000 so'm", desc:"Kul rang laminat, gorizontal ikki chiziqli minimalistik bezak.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#8d8378"/><rect x="26" y="26" width="68" height="174" fill="none" stroke="#3a2f27" stroke-width="1"/><path d="M26 90 H94M26 140 H94" stroke="#3a2f27" stroke-width="1"/></svg>' },
+    "Marg'ilon":   { series:"Naqshkor seriya", price:"2 940 000 so'm", desc:"Ipak to'qimasidagi to'lqinsimon naqshdan ilhomlangan bezak.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#5f3a19"/><path d="M60 36 C76 52 76 76 60 92 C44 76 44 52 60 36 Z" fill="none" stroke="#c9a44c" stroke-width="1.6"/><path d="M60 92 C76 108 76 132 60 148 C44 132 44 108 60 92 Z" fill="none" stroke="#c9a44c" stroke-width="1.6"/><path d="M60 148 C76 164 76 188 60 200" fill="none" stroke="#c9a44c" stroke-width="1.6"/></svg>' },
+    "Shahrisabz":  { series:"Klassik seriya",  price:"3 180 000 so'm", desc:"Qora mat fon, markazida oltin halqa bezak bilan hashamatli ko'rinish.", thumb:'<svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#1c1712"/><rect x="26" y="26" width="68" height="174" fill="none" stroke="#c9a44c" stroke-width="1"/><path d="M26 60 L94 60 M26 160 L94 160" stroke="#c9a44c" stroke-width="1"/><circle cx="60" cy="113" r="18" fill="none" stroke="#c9a44c" stroke-width="1.4"/></svg>' }
+  };
+
+  var currentUnitPrice = 0;
+  var quantity = 1;
+
+  function formatSom(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + " so'm";
+  }
+
+  function parsePrice(priceStr) {
+    return parseInt(priceStr.replace(/[^\d]/g, ''), 10) || 0;
+  }
+
+  function updateTotal() {
+    var totalEl = document.getElementById('ordTotal');
+    var totalMobileEl = document.getElementById('ordTotalMobile');
+    var text = formatSom(currentUnitPrice * quantity);
+    if (totalEl) totalEl.textContent = text;
+    if (totalMobileEl) totalMobileEl.textContent = text;
+  }
+
+  function renderModel(name) {
+    var m = MODELS[name];
+    if (!m) return;
+    document.getElementById('ordThumb').innerHTML = m.thumb;
+    document.getElementById('ordSeries').textContent = m.series;
+    document.getElementById('ordName2').textContent = name;
+    document.getElementById('ordDesc').textContent = m.desc;
+    document.getElementById('ordPrice').textContent = m.price;
+    currentUnitPrice = parsePrice(m.price);
+    updateTotal();
+  }
+
+  // ---------- Miqdor (+/-) boshqaruvi ----------
+  var qtyValueEl = document.getElementById('qtyValue');
+  var qtyMinusBtn = document.getElementById('qtyMinus');
+  var qtyPlusBtn = document.getElementById('qtyPlus');
+
+  function setQuantity(n) {
+    quantity = Math.max(1, Math.min(50, n));
+    if (qtyValueEl) qtyValueEl.textContent = quantity;
+    updateTotal();
+  }
+
+  if (qtyMinusBtn) qtyMinusBtn.addEventListener('click', function () { setQuantity(quantity - 1); });
+  if (qtyPlusBtn) qtyPlusBtn.addEventListener('click', function () { setQuantity(quantity + 1); });
+
+  // ---------- URL'dan model nomini o'qish ----------
+  var params = new URLSearchParams(window.location.search);
+  var modelParam = params.get('model');
+  var modelSelect = document.getElementById('ordModel');
+
+  if (modelParam && MODELS[modelParam]) {
+    modelSelect.value = modelParam;
+    renderModel(modelParam);
+  } else {
+    renderModel('Buxoro');
+  }
+
+  modelSelect.addEventListener('change', function () {
+    renderModel(this.value);
+  });
+
+  // ---------- O'lcham tanlash ----------
+  var sizeSelect = document.getElementById('ordSize');
+  var ordSizeViewEl = document.getElementById('ordSizeView');
+  if (sizeSelect && ordSizeViewEl) {
+    ordSizeViewEl.textContent = sizeSelect.value;
+    sizeSelect.addEventListener('change', function () {
+      ordSizeViewEl.textContent = sizeSelect.value;
+    });
+  }
+
+  // ---------- Forma yuborilganda ----------
+  document.getElementById('orderForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    document.getElementById('formState').style.display = 'none';
+    document.getElementById('successBox').classList.add('show');
+    var mobBar = document.getElementById('mobileOrderBar');
+    if (mobBar) mobBar.style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ---------- Yetkazib berish xaritasi (OpenStreetMap / Leaflet) ----------
+  (function () {
+    var mapEl = document.getElementById('deliveryMap');
+    if (!mapEl || typeof L === 'undefined') return;
+
+    // Yetkazib berish mumkin bo'lgan viloyatlar chegaralari (taxminiy poligon koordinatalar,
+    // aniq rasmiy chegara kerak bo'lsa GeoJSON fayl bilan almashtirish mumkin)
+    var ALLOWED_REGIONS = {
+      "Toshkent viloyati": [
+        [41.85, 69.95], [41.75, 70.35], [41.35, 70.55], [41.05, 70.35],
+        [40.75, 70.05], [40.85, 69.55], [41.05, 69.15], [41.35, 68.75],
+        [41.65, 68.85], [41.85, 69.35], [41.85, 69.95]
+      ],
+      "Sirdaryo viloyati": [
+        [40.85, 68.55], [40.85, 69.15], [40.55, 69.35], [40.15, 69.15],
+        [40.05, 68.75], [40.25, 68.35], [40.65, 68.25], [40.85, 68.55]
+      ],
+      "Samarqand viloyati": [
+        [40.15, 66.55], [40.05, 67.55], [39.75, 67.85], [39.35, 67.65],
+        [39.05, 67.15], [39.15, 66.35], [39.55, 65.95], [39.95, 66.05], [40.15, 66.55]
+      ],
+      "Navoiy viloyati": [
+        [42.05, 65.95], [41.75, 66.55], [40.85, 66.75], [40.15, 66.45],
+        [39.85, 65.55], [39.55, 64.25], [39.85, 62.75], [40.55, 62.35],
+        [41.55, 63.05], [42.05, 64.25], [42.05, 65.95]
+      ],
+      "Qashqadaryo viloyati": [
+        [39.15, 65.15], [39.05, 66.35], [38.55, 66.95], [37.95, 66.75],
+        [37.85, 65.95], [38.15, 65.05], [38.65, 64.55], [39.05, 64.75], [39.15, 65.15]
+      ],
+      "Jizzax viloyati": [
+        [40.55, 67.55], [40.45, 68.35], [40.05, 68.65], [39.55, 68.35],
+        [39.35, 67.85], [39.55, 67.15], [40.05, 66.95], [40.35, 67.15], [40.55, 67.55]
+      ]
+    };
+
+    // Nuqtaning poligon ichida yoki tashqarisida ekanligini aniqlash (ray-casting algoritmi)
+    function pointInPolygon(lat, lng, polygon) {
+      var inside = false;
+      for (var i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        var yi = polygon[i][0], xi = polygon[i][1];
+        var yj = polygon[j][0], xj = polygon[j][1];
+        var intersect = ((yi > lat) !== (yj > lat)) &&
+          (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
+    function findAllowedRegion(lat, lng) {
+      for (var name in ALLOWED_REGIONS) {
+        if (pointInPolygon(lat, lng, ALLOWED_REGIONS[name])) return name;
+      }
+      return null;
+    }
+
+    var marker = null;
+    var statusEl = document.getElementById('deliveryStatus');
+    var addressDisplayEl = document.getElementById('deliveryAddress');
+    var addrRegionEl = document.getElementById('addrRegion');
+    var addrMahallaEl = document.getElementById('addrMahalla');
+    var addrStreetEl = document.getElementById('addrStreet');
+    var addrHouseEl = document.getElementById('addrHouse');
+
+    // Manzil maydonlaridagi joriy qiymatlar asosida "Tanlangan manzil" panelini yangilash
+    function updateAddressDisplay() {
+      var parts = [];
+      if (addrHouseEl.value.trim()) parts.push(addrHouseEl.value.trim() + '-uy');
+      if (addrStreetEl.value.trim()) parts.push(addrStreetEl.value.trim());
+      if (addrMahallaEl.value.trim()) parts.push(addrMahallaEl.value.trim());
+      if (addrRegionEl.value.trim()) parts.push(addrRegionEl.value.trim());
+
+      if (!parts.length) {
+        addressDisplayEl.classList.remove('show');
+        addressDisplayEl.innerHTML = '';
+        return;
+      }
+
+      addressDisplayEl.classList.add('show');
+      addressDisplayEl.innerHTML = '📍 Tanlangan manzil: <b>' + parts.join(', ') + '</b>';
+    }
+
+    var map = L.map(mapEl, {
+      center: [40.127041, 67.905874],
+      zoom: 7,
+      minZoom: 5,
+      maxZoom: 19
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Hududlarni xaritada rangli poligon sifatida chizish
+    var polygons = [];
+    Object.keys(ALLOWED_REGIONS).forEach(function (name) {
+      var polygon = L.polygon(ALLOWED_REGIONS[name], {
+        fillColor: '#c9a44c',
+        fillOpacity: 0.2,
+        color: '#c9a44c',
+        weight: 1.5,
+        opacity: 0.9
+      }).addTo(map).bindTooltip(name);
+      polygons.push(polygon);
+    });
+
+    // Bosilgan nuqta bo'yicha mahalla/ko'cha/uy nomini avtomatik aniqlash
+      // Bepul, kalit talab qilmaydigan va CORS'ga to'liq ochiq OpenStreetMap Nominatim xizmati orqali
+      var NOMINATIM_BASE = 'https://nominatim.openstreetmap.org';
+
+      function nominatimReverse(lat, lng) {
+        var url = NOMINATIM_BASE + '/reverse?format=jsonv2&lat=' + lat + '&lon=' + lng +
+          '&addressdetails=1&accept-language=uz,ru';
+        return fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        });
+      }
+
+      function nominatimSearch(query) {
+        var url = NOMINATIM_BASE + '/search?format=jsonv2&addressdetails=1&limit=1&countrycodes=uz' +
+          '&accept-language=uz,ru&q=' + encodeURIComponent(query);
+        return fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        });
+      }
+
+      function reverseGeocodeAndFill(lat, lng) {
+        nominatimReverse(lat, lng).then(function (data) {
+          var addr = data && data.address;
+          if (!addr) return;
+
+          // OSM'da mahalla nomi turli teglar ostida kelishi mumkin — barchasini tekshiramiz
+          var mahalla = addr.suburb || addr.neighbourhood || addr.quarter ||
+            addr.city_district || addr.residential || '';
+          var street = addr.road || addr.pedestrian || addr.footway || '';
+          var house = addr.house_number || '';
+
+          if (mahalla) addrMahallaEl.value = mahalla;
+          if (street) addrStreetEl.value = street;
+          if (house) addrHouseEl.value = house;
+
+          updateAddressDisplay();
+        }).catch(function (err) {
+          // Xizmat javob bermasa — foydalanuvchi maydonlarni qo'lda to'ldirishi mumkin
+          console.error('Teskari geokodlash xatosi:', err);
+        });
+      }
+
+      // Xaritaning istalgan nuqtasiga (shu jumladan rangli hudud ustiga) bosilganda ishlaydigan umumiy funksiya
+      function handleMapClick(coords, skipReverseGeocode) {
+        var lat = coords[0], lng = coords[1];
+
+        if (marker) map.removeLayer(marker);
+
+        var region = findAllowedRegion(lat, lng);
+
+        statusEl.classList.remove('ok', 'fail');
+        statusEl.classList.add('show');
+
+        if (region) {
+          statusEl.classList.add('ok');
+          statusEl.innerHTML = '✓ Tanlangan hudud: <b>' + region + '</b>. Bu manzilga yetkazib bera olamiz.';
+          marker = L.circleMarker(coords, {
+            radius: 9, color: '#7a4a20', weight: 2, fillColor: '#c9a44c', fillOpacity: 1
+          }).addTo(map).bindPopup(region + ' — yetkazib berish mumkin ✓');
+          addrRegionEl.value = region;
+        } else {
+          statusEl.classList.add('fail');
+          statusEl.innerHTML = '✕ Bu joyga yetqazib bera olmaymiz. Hozircha faqat Toshkent, Sirdaryo, Samarqand, Navoiy, Qashqadaryo va Jizzax viloyatlariga yetkazib beramiz.';
+          marker = L.circleMarker(coords, {
+            radius: 9, color: '#7a2020', weight: 2, fillColor: '#e06060', fillOpacity: 1
+          }).addTo(map).bindPopup('Bu joyga yetqazib bera olmaymiz ✕');
+          addrRegionEl.value = '';
+        }
+
+        marker.openPopup();
+
+        if (!skipReverseGeocode) reverseGeocodeAndFill(lat, lng);
+      }
+
+      // Xaritaning bo'sh joyiga bosilganda
+      map.on('click', function (e) {
+        handleMapClick([e.latlng.lat, e.latlng.lng]);
+      });
+
+      // Rangli viloyat poligonlarining ustiga to'g'ridan-to'g'ri bosilganda ham xuddi shunday ishlashi uchun
+      polygons.forEach(function (polygon) {
+        polygon.on('click', function (e) {
+          handleMapClick([e.latlng.lat, e.latlng.lng]);
+        });
+      });
+
+      // ---------- Mijoz manzilni qo'lda kiritsa — "Qidirish" tugmasi orqali xarita o'sha joyga o'tishi ----------
+      var addrSearchBtn = document.getElementById('addrSearchBtn');
+      var addressErrorEl = document.getElementById('addressError');
+
+      var FIELD_LABELS = {
+        region: 'Viloyat',
+        mahalla: 'Mahalla',
+        street: 'Ko\'cha',
+        house: 'Xonadon / Uy'
+      };
+
+      function locateTypedAddress() {
+        var region = addrRegionEl.value.trim();
+        var mahalla = addrMahallaEl.value.trim();
+        var street = addrStreetEl.value.trim();
+        var house = addrHouseEl.value.trim();
+
+        var missing = [];
+        if (!region) missing.push(FIELD_LABELS.region);
+        if (!mahalla) missing.push(FIELD_LABELS.mahalla);
+        if (!street) missing.push(FIELD_LABELS.street);
+        if (!house) missing.push(FIELD_LABELS.house);
+
+        if (missing.length) {
+          addressErrorEl.classList.add('show');
+          addressErrorEl.innerHTML = '✕ Manzilni to\'liq kiriting. Quyidagi maydon' +
+            (missing.length > 1 ? 'lar' : '') + ' to\'ldirilmagan: <b>' + missing.join(', ') + '</b>.';
+          return;
+        }
+
+        addressErrorEl.classList.remove('show');
+        addressErrorEl.innerHTML = '';
+
+        var query = [region, mahalla, street + ' ' + house].join(', ');
+
+        addrSearchBtn.disabled = true;
+        addrSearchBtn.textContent = 'Qidirilmoqda...';
+
+        nominatimSearch(query).then(function (results) {
+          addrSearchBtn.disabled = false;
+          addrSearchBtn.innerHTML = '🔍 Manzilni xaritadan qidirish';
+
+          if (!results || !results.length) {
+            addressErrorEl.classList.add('show');
+            addressErrorEl.innerHTML = '✕ Kiritilgan manzil xaritadan topilmadi. Iltimos, ma\'lumotlarni tekshirib qayta urinib ko\'ring yoki xaritadan qo\'lda belgilang.';
+            return;
+          }
+
+          var coords = [parseFloat(results[0].lat), parseFloat(results[0].lon)];
+
+          map.flyTo(coords, 17, { duration: 0.4 });
+          handleMapClick(coords, true);
+          updateAddressDisplay();
+        }).catch(function (err) {
+          addrSearchBtn.disabled = false;
+          addrSearchBtn.innerHTML = '🔍 Manzilni xaritadan qidirish';
+          addressErrorEl.classList.add('show');
+          addressErrorEl.innerHTML = '✕ Qidirishda xatolik yuz berdi. Birozdan so\'ng qayta urinib ko\'ring.';
+          console.error('Geokodlash xatosi (manzil qidirish):', err);
+        });
+      }
+
+      if (addrSearchBtn) {
+        addrSearchBtn.addEventListener('click', locateTypedAddress);
+      }
+
+      // ---------- Xaritani to'liq ekranga o'tkazish ----------
+      var fsBtn = document.getElementById('mapFullscreenBtn');
+      var mapContainer = document.getElementById('deliveryMapContainer');
+
+      function resizeMap() {
+        setTimeout(function () { map.invalidateSize(); }, 260);
+      }
+
+      if (fsBtn && mapContainer) {
+        fsBtn.addEventListener('click', function () {
+          var active = mapContainer.classList.toggle('map-fullscreen-active');
+          document.body.classList.toggle('map-fullscreen-lock', active);
+          fsBtn.innerHTML = active ? '✕ To\'liq ekrandan chiqish' : '⛶ To\'liq ekran';
+          resizeMap();
+        });
+
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && mapContainer.classList.contains('map-fullscreen-active')) {
+            mapContainer.classList.remove('map-fullscreen-active');
+            document.body.classList.remove('map-fullscreen-lock');
+            fsBtn.innerHTML = '⛶ To\'liq ekran';
+            resizeMap();
+          }
+        });
+      }
+  })();
+</script>
+</body>
+</html>
