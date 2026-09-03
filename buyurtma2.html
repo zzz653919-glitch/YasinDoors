@@ -262,6 +262,14 @@
                     <option>Hali aniqlanmagan</option>
                   </select>
                 </div>
+                <div class="col-12">
+                  <label class="form-label" style="color:var(--muted); font-size:0.85rem;">O'lcham</label>
+                  <select id="ordSize" class="form-control form-control-custom">
+                    <option value="700 × 2000 mm">700 × 2000 mm</option>
+                    <option value="800 × 2000 mm" selected>800 × 2000 mm (standart)</option>
+                    <option value="900 × 2000 mm">900 × 2000 mm</option>
+                  </select>
+                </div>
               </div>
             </form>
 
@@ -346,6 +354,7 @@
             <div class="info-line" style="margin-top:16px;"><div class="k">Jami</div><div class="v" id="ordTotal">2 450 000 so'm</div></div>
 
             <hr style="border-color:var(--line); margin:20px 0;">
+            <div class="info-line"><div class="k">O'lcham</div><div class="v" id="ordSizeView">800 × 2000 mm</div></div>
             <div class="info-line"><div class="k">Kafolat</div><div class="v">5 yil</div></div>
             <div class="info-line"><div class="k">Muddat</div><div class="v">7–10 kun</div></div>
           </div>
@@ -468,6 +477,16 @@
   modelSelect.addEventListener('change', function () {
     renderModel(this.value);
   });
+
+  // ---------- O'lcham tanlash ----------
+  var sizeSelect = document.getElementById('ordSize');
+  var ordSizeViewEl = document.getElementById('ordSizeView');
+  if (sizeSelect && ordSizeViewEl) {
+    ordSizeViewEl.textContent = sizeSelect.value;
+    sizeSelect.addEventListener('change', function () {
+      ordSizeViewEl.textContent = sizeSelect.value;
+    });
+  }
 
   // ---------- Forma yuborilganda ----------
   document.getElementById('orderForm').addEventListener('submit', function (e) {
