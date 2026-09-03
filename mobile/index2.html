@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark" data-page="index">
+<head>
+<meta charset="UTF-8">
+<script>
+(function () {
+  var isMobile = /Android|iPhone|iPod|Mobile|Windows Phone/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  var map = { index: ['index.html', 'index2.html'], katalog: ['katalog.html', 'katalog2.html'], buyurtma: ['buyurtma.html', 'buyurtma2.html'] };
+  var page = document.documentElement.getAttribute('data-page');
+  if (!page || !map[page]) return;
+  var target = isMobile ? map[page][1] : map[page][0];
+  var raw = location.pathname.split('/').pop();
+  var current = raw === '' ? 'index.html' : raw;
+  if (current !== target) {
+    location.replace(target + location.search + location.hash);
+  }
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YasinDoors — MDF eshiklar ustaxonasi</title>
+<link rel="canonical" href="https://yasindoors.netlify.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="YasinDoors">
+<meta property="og:url" content="https://yasindoors.netlify.app/">
+<meta property="og:title" content="YasinDoors — MDF eshiklar ustaxonasi">
+<meta property="og:description" content="Naqsh san'ati va MDF texnologiyasini birlashtirgan eshiklar ustaxonasi. Bepul o'lchov, tez ishlab chiqarish va professional o'rnatish.">
+<meta name="description" content="Naqsh san'ati va MDF texnologiyasini birlashtirgan eshiklar ustaxonasi. Bepul o'lchov, tez ishlab chiqarish va professional o'rnatish.">
+<meta name="theme-color" content="#17130f">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="mobile-market.css">
+</head>
+<body class="mp-shell mp-home mp-has-tabbar">
+
+<!-- TOP BAR: manzil + tema -->
+<div class="mp-topbar">
+  <div class="mp-loc">
+    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
+    <div>
+      Toshkent
+      <svg viewBox="0 0 14 9" width="9" height="6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="margin-left:3px;"><path d="M1 1l6 6 6-6"/></svg>
+      <span class="mp-loc-sub">Yetkazib berish: 6 viloyat</span>
+    </div>
+  </div>
+  <button type="button" class="theme-toggle" id="themeToggle" aria-label="Rangni almashtirish">
+    <svg class="icon-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4.5"/>
+      <path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/>
+    </svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/>
+    </svg>
+  </button>
+</div>
+
+<!-- QIDIRUV: bosilib katalogga o'tadi va shu yerdan filtrlaydi -->
+<div class="mp-search-wrap">
+  <div class="mp-search">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input type="text" id="mpHomeSearch" placeholder="Model yoki naqsh nomini izlash" autocomplete="off">
+  </div>
+</div>
+
+<div class="mp-divider" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2214%22><path d=%22M0 12 C7 2 8 2 16 12 C24 2 25 2 32 12%22 fill=%22none%22 stroke=%22%23c9a44c%22 stroke-width=%221.4%22/></svg>');"></div>
+
+<!-- PROMO BANNER -->
+<div class="mp-banner" id="top">
+  <div class="eyebrow">MDF EShIK USTAXONASI · TOSHKENT</div>
+  <h1>Eshik — <em>uyning</em> birinchi so'zi</h1>
+  <p>Naqsh san'ati va zamonaviy MDF texnologiyasini birlashtiramiz. Har bir eshik millimetrigacha o'lchab, buyurtma asosida tayyorlanadi.</p>
+  <a href="katalog2.html" class="btn-brass">Katalogni ko'rish</a>
+  <div class="mp-stats-row">
+    <div><div class="num">12 yil</div><div class="lbl">Tajriba</div></div>
+    <div><div class="num">4600+</div><div class="lbl">O'rnatilgan</div></div>
+    <div><div class="num">5 yil</div><div class="lbl">Kafolat</div></div>
+  </div>
+</div>
+
+<!-- TEZKOR BO'LIMLAR -->
+<div class="mp-chip-row">
+  <a class="mp-chip" href="katalog2.html">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Barcha modellar
+  </a>
+  <a class="mp-chip" href="#ranglar">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2a4 4 0 0 0 4-4c0-4.4-4-7.4-9-7.4Z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg>
+    Ranglar
+  </a>
+  <a class="mp-chip" href="#jarayon">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+    Jarayon
+  </a>
+  <a class="mp-chip" href="buyurtma2.html">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 12.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg>
+    Buyurtma berish
+  </a>
+</div>
+
+<!-- MASHHUR MODELLAR -->
+<div class="mp-section-head">
+  <h2>Mashhur modellar</h2>
+  <a href="katalog2.html">Barchasini ko'rish →</a>
+</div>
+<div class="mp-grid">
+
+  <div class="mp-card" data-search="buxoro klassik seriya an'anaviy islimi naqshli ikki panelli og'ir eshik">
+    <div class="mp-card-media">
+      <div class="mp-badge">Klassik</div>
+      <button type="button" class="mp-heart" aria-label="Saqlash"><svg viewBox="0 0 24 24"><path d="M12 21c-5-3.6-9-7-9-11.3C3 6 5.4 4 8 4c1.7 0 3.2.9 4 2.3C12.8 4.9 14.3 4 16 4c2.6 0 5 2 5 5.7 0 4.3-4 7.7-9 11.3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+      <svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#7a4a20"/><rect x="26" y="26" width="68" height="70" fill="#5f3a19"/><rect x="26" y="104" width="68" height="96" fill="#5f3a19"/></svg>
+    </div>
+    <div class="mp-card-body">
+      <h3>Buxoro</h3>
+      <p class="mp-desc">An'anaviy islimi naqshli, ikki panelli og'ir eshik.</p>
+      <div class="mp-price">2 450 000 so'm</div>
+      <a href="buyurtma2.html?model=Buxoro" class="btn-brass">Buyurtma →</a>
+    </div>
+  </div>
+
+  <div class="mp-card" data-search="registon minimal seriya naqshsiz sof geometriya zamonaviy interyer">
+    <div class="mp-card-media">
+      <div class="mp-badge">Minimal</div>
+      <button type="button" class="mp-heart" aria-label="Saqlash"><svg viewBox="0 0 24 24"><path d="M12 21c-5-3.6-9-7-9-11.3C3 6 5.4 4 8 4c1.7 0 3.2.9 4 2.3C12.8 4.9 14.3 4 16 4c2.6 0 5 2 5 5.7 0 4.3-4 7.7-9 11.3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+      <svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#2a221b"/><rect x="26" y="26" width="68" height="174" fill="#1c1712" stroke="#c9a44c" stroke-width="1"/></svg>
+    </div>
+    <div class="mp-card-body">
+      <h3>Registon</h3>
+      <p class="mp-desc">Naqshsiz, sof geometriya — zamonaviy interyer uchun.</p>
+      <div class="mp-price">1 980 000 so'm</div>
+      <a href="buyurtma2.html?model=Registon" class="btn-brass">Buyurtma →</a>
+    </div>
+  </div>
+
+  <div class="mp-card" data-search="xiva naqshkor seriya girih uslubidagi geometrik naqsh kumush ilgak">
+    <div class="mp-card-media">
+      <div class="mp-badge">Naqshkor</div>
+      <button type="button" class="mp-heart" aria-label="Saqlash"><svg viewBox="0 0 24 24"><path d="M12 21c-5-3.6-9-7-9-11.3C3 6 5.4 4 8 4c1.7 0 3.2.9 4 2.3C12.8 4.9 14.3 4 16 4c2.6 0 5 2 5 5.7 0 4.3-4 7.7-9 11.3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+      <svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#8a5a2c"/><circle cx="60" cy="60" r="22" fill="none" stroke="#c9a44c" stroke-width="2"/><circle cx="60" cy="150" r="22" fill="none" stroke="#c9a44c" stroke-width="2"/></svg>
+    </div>
+    <div class="mp-card-body">
+      <h3>Xiva</h3>
+      <p class="mp-desc">Girih uslubidagi geometrik naqsh, kumush rangli ilgak.</p>
+      <div class="mp-price">2 890 000 so'm</div>
+      <a href="buyurtma2.html?model=Xiva" class="btn-brass">Buyurtma →</a>
+    </div>
+  </div>
+
+  <div class="mp-card" data-search="chorsu zamonaviy seriya vertikal chiziqli panel ofis">
+    <div class="mp-card-media">
+      <div class="mp-badge">Zamonaviy</div>
+      <button type="button" class="mp-heart" aria-label="Saqlash"><svg viewBox="0 0 24 24"><path d="M12 21c-5-3.6-9-7-9-11.3C3 6 5.4 4 8 4c1.7 0 3.2.9 4 2.3C12.8 4.9 14.3 4 16 4c2.6 0 5 2 5 5.7 0 4.3-4 7.7-9 11.3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+      <svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#3a2f27"/><rect x="26" y="26" width="30" height="174" fill="#241c16"/><rect x="64" y="26" width="30" height="174" fill="#241c16"/></svg>
+    </div>
+    <div class="mp-card-body">
+      <h3>Chorsu</h3>
+      <p class="mp-desc">Vertikal chiziqli panel, keng ofis xonalari uchun.</p>
+      <div class="mp-price">2 150 000 so'm</div>
+      <a href="buyurtma2.html?model=Chorsu" class="btn-brass">Buyurtma →</a>
+    </div>
+  </div>
+
+  <div class="mp-card" data-search="samarqand klassik seriya nafis o'simliksimon naqsh mehmonxona">
+    <div class="mp-card-media">
+      <div class="mp-badge">Klassik</div>
+      <button type="button" class="mp-heart" aria-label="Saqlash"><svg viewBox="0 0 24 24"><path d="M12 21c-5-3.6-9-7-9-11.3C3 6 5.4 4 8 4c1.7 0 3.2.9 4 2.3C12.8 4.9 14.3 4 16 4c2.6 0 5 2 5 5.7 0 4.3-4 7.7-9 11.3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+      <svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#5f3a19"/><path d="M60 30 C80 50 80 80 60 100 C40 80 40 50 60 30Z" fill="none" stroke="#c9a44c" stroke-width="2"/><path d="M60 100 C80 120 80 150 60 170 C40 150 40 120 60 100Z" fill="none" stroke="#c9a44c" stroke-width="2"/></svg>
+    </div>
+    <div class="mp-card-body">
+      <h3>Samarqand</h3>
+      <p class="mp-desc">Nafis o'simliksimon naqsh, mehmonxona uchun ideal.</p>
+      <div class="mp-price">2 690 000 so'm</div>
+      <a href="buyurtma2.html?model=Samarqand" class="btn-brass">Buyurtma →</a>
+    </div>
+  </div>
+
+  <div class="mp-card" data-search="farg'ona minimal seriya oq laminatli yorug' zamonaviy">
+    <div class="mp-card-media">
+      <div class="mp-badge">Minimal</div>
+      <button type="button" class="mp-heart" aria-label="Saqlash"><svg viewBox="0 0 24 24"><path d="M12 21c-5-3.6-9-7-9-11.3C3 6 5.4 4 8 4c1.7 0 3.2.9 4 2.3C12.8 4.9 14.3 4 16 4c2.6 0 5 2 5 5.7 0 4.3-4 7.7-9 11.3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>
+      <svg viewBox="0 0 120 220"><rect x="10" y="10" width="100" height="200" rx="3" fill="#efe9da" stroke="#a89a8a" stroke-width="1"/><rect x="26" y="26" width="68" height="70" fill="#e2dac8"/><rect x="26" y="104" width="68" height="96" fill="#e2dac8"/></svg>
+    </div>
+    <div class="mp-card-body">
+      <h3>Farg'ona</h3>
+      <p class="mp-desc">Oq laminatli, yorug' va keng ko'rinishdagi dizayn.</p>
+      <div class="mp-price">2 040 000 so'm</div>
+      <a href="buyurtma2.html?model=Farg'ona" class="btn-brass">Buyurtma →</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="mp-divider" style="background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2232%22 height=%2214%22><path d=%22M0 12 C7 2 8 2 16 12 C24 2 25 2 32 12%22 fill=%22none%22 stroke=%22%23c9a44c%22 stroke-width=%221.4%22/></svg>');"></div>
+
+<!-- RANGLAR -->
+<section id="ranglar" style="padding:20px 0 4px;">
+  <div class="mp-section-head" style="padding-top:0;">
+    <h2>O'z rangingizni tanlang</h2>
+  </div>
+  <p style="padding:0 16px; color:var(--muted); font-size:0.84rem; line-height:1.6; margin:0 0 4px;">Har bir model 6 xil laminat rangida ishlab chiqariladi. Rangni bosing va ko'ring.</p>
+  <div class="mp-finish-card finish-panel">
+    <div class="finish-preview" id="finishPreview"></div>
+    <div class="finish-name" id="finishName">Yong'oq</div>
+    <div class="finish-code mono" id="finishCode">#A4652C</div>
+    <div class="swatch-row" id="swatchRow">
+      <div class="swatch active" style="background:#a4652c" data-color="#a4652c" data-dark="#7a4a20" data-name="Yong'oq"></div>
+      <div class="swatch" style="background:#5b3a24" data-color="#5b3a24" data-dark="#3f2718" data-name="Venge"></div>
+      <div class="swatch" style="background:#efe9da" data-color="#efe9da" data-dark="#d9cfb8" data-name="Oq laminat"></div>
+      <div class="swatch" style="background:#8d8378" data-color="#8d8378" data-dark="#655d54" data-name="Kul rang"></div>
+      <div class="swatch" style="background:#1c1712" data-color="#1c1712" data-dark="#0d0a08" data-name="Qora mat"></div>
+      <div class="swatch" style="background:#c99a52" data-color="#c99a52" data-dark="#9c7639" data-name="Eman"></div>
+    </div>
+  </div>
+</section>
+
+<!-- JARAYON -->
+<section id="jarayon" style="padding:18px 0 4px;">
+  <div class="mp-section-head" style="padding-top:0;">
+    <h2>O'lchovdan o'rnatishgacha</h2>
+  </div>
+  <div style="padding:0 16px;">
+    <div class="process-row">
+      <div class="process-num mono">01</div>
+      <div class="process-txt"><h3>Bepul o'lchov</h3><p>Ustamiz manzilingizga kelib, eshik oralig'ini millimetrigacha o'lchaydi.</p></div>
+    </div>
+    <div class="process-row">
+      <div class="process-num mono">02</div>
+      <div class="process-txt"><h3>Model va rang tanlash</h3><p>Katalogdan model, naqsh va laminat rangini birga tanlaymiz.</p></div>
+    </div>
+    <div class="process-row">
+      <div class="process-num mono">03</div>
+      <div class="process-txt"><h3>Ishlab chiqarish</h3><p>CNC frezer orqali naqsh o'yiladi, panel presslanadi va laminatlanadi — 7–10 kun.</p></div>
+    </div>
+    <div class="process-row">
+      <div class="process-num mono">04</div>
+      <div class="process-txt"><h3>Sifat nazorati</h3><p>Har bir eshik geometriya, tekislik va laminat sifati bo'yicha tekshiriladi.</p></div>
+    </div>
+    <div class="process-row">
+      <div class="process-num mono">05</div>
+      <div class="process-txt"><h3>Yetkazib berish va o'rnatish</h3><p>Ustaxona brigadasi eshikni o'rnatadi va 5 yillik kafolat beradi.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ALOQA -->
+<div class="mp-contact-mini">
+  <div class="fbrand">Yasin<span>Doors</span></div>
+  <p>Naqsh san'ati va MDF texnologiyasini birlashtirgan eshiklar ustaxonasi. 2013 yildan buyon Toshkentda.</p>
+  <a class="line" href="tel:+998933002020">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.4 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2Z"/></svg>
+    +998 93 300 20 20
+  </a>
+  <a class="line" href="https://maps.app.goo.gl/oFEyE3jcY1ZPsXMJ9" target="_blank" rel="noopener">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>
+    Bizning manzil
+  </a>
+</div>
+<div class="mp-bottom-line">© 2026 YasinDoors Ustaxonasi. Har eshikda bir hikoya.</div>
+
+<!-- TIZIMGA KIRISH / RO'YXATDAN O'TISH modali -->
+<div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:var(--surface); border:1px solid var(--line); border-radius:2px; color:var(--cream);">
+      <div class="modal-header" style="border-color:var(--line); gap:14px;">
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab-btn active" data-tab="login">Tizimga kirish</button>
+          <button type="button" class="auth-tab-btn" data-tab="register">Ro'yxatdan o'tish</button>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Yopish"></button>
+      </div>
+      <div class="modal-body">
+        <form id="loginForm" class="auth-panel active" data-panel="login">
+          <div class="mb-3">
+            <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Telefon raqam</label>
+            <input type="tel" class="form-control form-control-custom" placeholder="+998 __ ___ __ __" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Parol</label>
+            <input type="password" class="form-control form-control-custom" placeholder="Parolingiz" required>
+          </div>
+          <button type="submit" class="btn-brass w-100 mt-2">Kirish</button>
+        </form>
+        <form id="registerForm" class="auth-panel" data-panel="register">
+          <div class="mb-3">
+            <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Ismingiz</label>
+            <input type="text" class="form-control form-control-custom" placeholder="Ismingizni kiriting" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Telefon raqam</label>
+            <input type="tel" class="form-control form-control-custom" placeholder="+998 __ ___ __ __" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Parol</label>
+            <input type="password" class="form-control form-control-custom" placeholder="Parol yarating" required>
+          </div>
+          <button type="submit" class="btn-brass w-100 mt-2">Ro'yxatdan o'tish</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<a href="https://t.me/+998933002020" target="_blank" rel="noopener" class="float-contact" aria-label="Telegram orqali yozing">
+  <svg viewBox="0 0 24 24" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M22 3L2.5 10.7c-.7.3-.7 1.3.1 1.5l4.9 1.5 1.9 6.1c.2.7 1.1.9 1.6.3l2.7-3 5 3.7c.6.5 1.5.1 1.7-.6L23.9 4c.2-.8-.6-1.4-1.9-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M7.5 13.7l10-7.2-8 8.4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  </svg>
+  <span class="float-ping"></span>
+</a>
+
+<!-- PASTKI TAB-NAVIGATSIYA -->
+<nav class="mp-tabbar" aria-label="Asosiy navigatsiya">
+  <a class="mp-tab active" href="index2.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+    Bosh sahifa
+  </a>
+  <a class="mp-tab" href="katalog2.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Katalog
+  </a>
+  <a class="mp-tab" href="buyurtma2.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 12.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg>
+    Buyurtma
+  </a>
+  <a class="mp-tab" href="#ranglar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 2-.9 2-2 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2a4 4 0 0 0 4-4c0-4.4-4-7.4-9-7.4Z"/><circle cx="7.5" cy="10.5" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg>
+    Ranglar
+  </a>
+  <button type="button" class="mp-tab" data-bs-toggle="modal" data-bs-target="#authModal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    Kabinet
+  </button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="java.js"></script>
+</body>
+</html>
