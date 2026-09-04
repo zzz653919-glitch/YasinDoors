@@ -239,30 +239,6 @@
                   <input type="tel" id="ordPhone" class="form-control form-control-custom" placeholder="+998 __ ___ __ __" required>
                 </div>
                 <div class="col-12">
-                  <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Model</label>
-                  <select id="ordModel" class="form-control form-control-custom">
-                    <option>Buxoro</option>
-                    <option>Registon</option>
-                    <option>Xiva</option>
-                    <option>Chorsu</option>
-                    <option>Samarqand</option>
-                    <option>Farg'ona</option>
-                    <option>Andijon</option>
-                    <option>Namangan</option>
-                    <option>Nukus</option>
-                    <option>Termiz</option>
-                    <option>Qo'qon</option>
-                    <option>Jizzax</option>
-                    <option>Guliston</option>
-                    <option>Navoiy</option>
-                    <option>Urganch</option>
-                    <option>Denov</option>
-                    <option>Marg'ilon</option>
-                    <option>Shahrisabz</option>
-                    <option>Hali aniqlanmagan</option>
-                  </select>
-                </div>
-                <div class="col-12">
                   <label class="form-label" style="color:var(--muted); font-size:0.85rem;">O'lcham</label>
                   <div class="size-btn-row" id="sizeBtnRow">
                     <button type="button" class="size-btn" data-size="700 × 2000 mm">700 × 2000 mm</button>
@@ -465,18 +441,12 @@
   // ---------- URL'dan model nomini o'qish ----------
   var params = new URLSearchParams(window.location.search);
   var modelParam = params.get('model');
-  var modelSelect = document.getElementById('ordModel');
 
   if (modelParam && MODELS[modelParam]) {
-    modelSelect.value = modelParam;
     renderModel(modelParam);
   } else {
     renderModel('Buxoro');
   }
-
-  modelSelect.addEventListener('change', function () {
-    renderModel(this.value);
-  });
 
   // ---------- O'lcham tugmalari ----------
   var sizeBtns = document.querySelectorAll('.size-btn');
