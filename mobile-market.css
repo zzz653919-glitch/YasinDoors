@@ -97,7 +97,8 @@
 .mp-stats-row{ display:flex; gap:0; margin-top:18px; }
 .mp-stats-row > div{ flex:1; border-left:1px solid var(--line); padding-left:10px; }
 .mp-stats-row > div:first-child{ border-left:none; padding-left:0; }
-.mp-stats-row .num{ font-family:'Fraunces',serif; font-size:1.05rem; color:var(--brass); font-weight:600; }
+.mp-stats-row .num{ display:flex; align-items:center; gap:5px; font-family:'Fraunces',serif; font-size:1.05rem; color:var(--brass); font-weight:600; }
+.mp-stats-row .num svg{ flex-shrink:0; width:14px; height:14px; }
 .mp-stats-row .lbl{ font-size:0.62rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
 
 /* ---------- Tezkor bo'limlar (chip qatori) ---------- */

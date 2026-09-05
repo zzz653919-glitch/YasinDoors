@@ -33,6 +33,17 @@ document.addEventListener('DOMContentLoaded', function () {
     if (finishName) finishName.textContent = sw.dataset.name;
     if (finishCode) finishCode.textContent = color.toUpperCase();
     if (finishPreview) finishPreview.style.background = color;
+
+    var ordColorView = document.getElementById('ordColorView');
+    if (ordColorView) ordColorView.textContent = sw.dataset.name;
+
+    // Buyurtma sahifasidagi eshik rasmini (thumbnail) tanlangan rangga bo'yash
+    var thumbHost = document.getElementById('ordThumb');
+    if (thumbHost) {
+      var thumbSvg = thumbHost.querySelector('svg');
+      var baseRect = thumbSvg ? thumbSvg.querySelector('rect') : null;
+      if (baseRect) baseRect.setAttribute('fill', color);
+    }
   }
 
   if (swatchRow) {
@@ -75,8 +86,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     card.style.cursor = 'pointer';
     card.addEventListener('click', function (e) {
-      // Agar foydalanuvchi aynan "Buyurtma →" havolasini bossa, uning o'z navigatsiyasi ishlaydi
-      if (e.target.closest('a')) return;
+      // Agar foydalanuvchi aynan "Buyurtma →" havolasini yoki "sevimli" yurak tugmasini bossa,
+      // ularning o'z ishlovchisi ishlaydi — kartochkani butunlay bosish bilan aralashtirmaymiz
+      if (e.target.closest('a') || e.target.closest('button')) return;
       window.location.href = orderLink.getAttribute('href');
     });
   });
@@ -112,6 +124,34 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
+  // ---------- Desktop katalog: nomi/naqshi bo'yicha real vaqtda qidiruv ----------
+  var katSearch = document.getElementById('katSearch');
+  var katGrid = document.getElementById('katGrid');
+  var katEmpty = document.getElementById('katEmpty');
+
+  if (katSearch && katGrid) {
+    function katFilter(query) {
+      var q = query.trim().toLowerCase();
+      var cards = katGrid.querySelectorAll('.model-card');
+      var visibleCount = 0;
+      cards.forEach(function (card) {
+        var hay = (card.dataset.search || card.textContent || '').toLowerCase();
+        var match = !q || hay.indexOf(q) !== -1;
+        var col = card.closest('[class*="col-"]') || card;
+        col.style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+      });
+      if (katEmpty) katEmpty.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+
+    var katQParam = new URLSearchParams(window.location.search).get('q');
+    if (katQParam) {
+      katSearch.value = katQParam;
+      katFilter(katQParam);
+    }
+    katSearch.addEventListener('input', function () { katFilter(katSearch.value); });
+  }
+
   // ---------- Mobil market: katalogda nomi/naqshi bo'yicha real vaqtda qidiruv ----------
   var mpSearch = document.getElementById('mpSearch');
   var mpGrid = document.getElementById('mpGrid') || document.querySelector('.mp-grid');
@@ -141,6 +181,18 @@ document.addEventListener('DOMContentLoaded', function () {
     mpSearch.addEventListener('input', function () { mpFilter(mpSearch.value); });
   }
 
+  // ---------- Bosh sahifadagi qidiruv katalogga yo'naltiradi (desktop) ----------
+  var homeSearch = document.getElementById('homeSearch');
+  if (homeSearch) {
+    homeSearch.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var v = homeSearch.value.trim();
+        window.location.href = 'katalog.html' + (v ? '?q=' + encodeURIComponent(v) : '');
+      }
+    });
+  }
+
   // ---------- Mobil market: bosh sahifadagi qidiruv katalogga yo'naltiradi ----------
   var mpHomeSearch = document.getElementById('mpHomeSearch');
   if (mpHomeSearch) {
@@ -153,8 +205,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ---------- Mobil market: "saqlash" (yurak) tugmasi — mahalliy vizual belgi ----------
-  document.querySelectorAll('.mp-heart').forEach(function (btn) {
+  // ---------- "Saqlash" (yurak) tugmasi — mahalliy vizual belgi (mobil market VA desktop katalog) ----------
+  document.querySelectorAll('.mp-heart, .model-heart').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();

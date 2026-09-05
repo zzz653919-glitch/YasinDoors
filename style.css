@@ -100,13 +100,55 @@ a{ color:inherit; text-decoration:none; }
 }
 .brand-mark span{ color:var(--brass); }
 .nav-link-custom{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
   color:var(--muted) !important;
   font-size:0.92rem;
   font-weight:500;
   margin:0 14px;
   transition:color .2s;
 }
+.nav-link-custom svg{ color:var(--brass); flex-shrink:0; opacity:0.85; }
 .nav-link-custom:hover{ color:var(--cream) !important; }
+.nav-link-custom:hover svg{ opacity:1; }
+
+/* ---------- Navbardagi manzil nishonchasi (mobil top-bardagi "Toshkent" bilan bir xil) ---------- */
+.loc-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:8px 14px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  color:var(--cream);
+  font-size:0.82rem;
+  font-weight:600;
+  margin:0 6px;
+  white-space:nowrap;
+}
+.loc-badge svg{ color:var(--brass); flex-shrink:0; }
+.loc-badge .loc-sub{ display:block; font-size:0.62rem; font-weight:500; color:var(--muted); margin-top:1px; }
+@media (max-width:991.98px){
+  .loc-badge{ align-self:flex-start; margin:12px 0; }
+}
+
+/* ---------- Bosh sahifadagi tezkor bo'limlar (mobil chip-row bilan bir xil, desktopga qo'shildi) ---------- */
+.quick-links{ display:flex; gap:12px; flex-wrap:wrap; margin-top:26px; }
+.quick-links a{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 18px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--surface);
+  color:var(--cream);
+  font-size:0.84rem;
+  font-weight:600;
+  transition: border-color .2s, color .2s, transform .2s;
+}
+.quick-links a:hover{ border-color:var(--brass); color:var(--brass); transform:translateY(-2px); }
+.quick-links svg{ color:var(--brass); flex-shrink:0; }
+@media (max-width:991px){ .quick-links{ justify-content:center; } }
 .btn-brass{
   background:var(--brass);
   color:#1a1510;
@@ -174,11 +216,15 @@ a{ color:inherit; text-decoration:none; }
   padding-top:28px;
   border-top:1px solid var(--line);
 }
+.hero-stats svg{ color:var(--brass); margin-bottom:6px; }
 .hero-stats .num{
   font-family:'Fraunces',serif;
   font-size:1.9rem;
   color:var(--brass);
   font-weight:600;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 .hero-stats .lbl{
   font-size:0.78rem;
@@ -232,8 +278,11 @@ section{ padding:100px 0; position:relative; }
   color:var(--wood);
   font-size:0.8rem;
   margin-bottom:14px;
-  display:block;
+  display:flex;
+  align-items:center;
+  gap:9px;
 }
+.about-card .idx svg{ color:var(--brass); flex-shrink:0; }
 .about-card h3{ font-size:1.2rem; color:var(--cream); margin-bottom:10px;}
 .about-card p{ color:var(--muted); font-size:0.94rem; line-height:1.65; margin:0;}
 
@@ -248,6 +297,7 @@ section{ padding:100px 0; position:relative; }
 }
 .model-card:hover{ border-color: var(--wood); transform:translateY(-6px); }
 .model-thumb{
+  position:relative;
   height:230px;
   display:flex;
   align-items:center;
@@ -274,6 +324,41 @@ section{ padding:100px 0; position:relative; }
 }
 .model-price .price{ font-family:'JetBrains Mono',monospace; color:var(--cream); font-weight:500;}
 .model-price a{ color:var(--brass); font-size:0.85rem; font-weight:600;}
+
+/* ---------- Model thumb: seriya nishonchasi va sevimlilar tugmasi (mobil market bilan bir xil) ---------- */
+.model-badge{
+  position:absolute; top:12px; left:12px; z-index:2;
+  background:rgba(23,19,15,0.72);
+  color:var(--brass);
+  font-family:'JetBrains Mono',monospace;
+  font-size:0.62rem;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  padding:5px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+}
+html[data-theme="light"] .model-badge{ background:rgba(255,255,255,0.82); }
+.model-heart{
+  position:absolute; top:10px; right:10px; z-index:2;
+  width:32px; height:32px; border-radius:50%;
+  background:rgba(23,19,15,0.55);
+  border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--cream);
+  cursor:pointer;
+  transition: border-color .2s, color .2s, transform .15s;
+}
+html[data-theme="light"] .model-heart{ background:rgba(255,255,255,0.78); }
+.model-heart svg{ width:16px; height:16px; }
+.model-heart:hover{ border-color:var(--wood); color:var(--wood); }
+.model-heart.saved{ color:var(--wood); border-color:var(--wood); }
+.model-heart.saved svg{ fill:var(--wood); }
+@media (max-width:575.98px){
+  .model-badge{ font-size:0.56rem; padding:4px 8px; top:8px; left:8px; }
+  .model-heart{ width:26px; height:26px; top:8px; right:8px; }
+  .model-heart svg{ width:13px; height:13px; }
+}
 
 /* finishes / swatches */
 .finish-panel{
@@ -375,14 +460,16 @@ section{ padding:100px 0; position:relative; }
   width:70px;
   flex-shrink:0;
 }
-.process-txt h3{ font-size:1.1rem; color:var(--cream); margin-bottom:6px;}
+.process-txt h3{ font-size:1.1rem; color:var(--cream); margin-bottom:6px; display:flex; align-items:center; gap:9px;}
+.process-txt h3 svg{ color:var(--brass); flex-shrink:0; }
 .process-txt p{ color:var(--muted); font-size:0.92rem; margin:0; max-width:520px;}
 
 /* specs */
 .specs-table{ width:100%; border-collapse:collapse; }
 .specs-table tr{ border-bottom:1px solid var(--line); }
 .specs-table td{ padding:16px 6px; font-size:0.94rem; }
-.specs-table td:first-child{ color:var(--muted); }
+.specs-table td:first-child{ color:var(--muted); display:flex; align-items:center; gap:10px; }
+.specs-table td:first-child svg{ color:var(--brass); flex-shrink:0; }
 .specs-table td:last-child{ color:var(--cream); text-align:right; font-family:'JetBrains Mono',monospace; font-size:0.88rem;}
 
 /* testimonials */
@@ -435,8 +522,9 @@ footer .fbrand{ font-family:'Fraunces',serif; font-size:1.3rem; color:var(--crea
 footer .fbrand span{ color:var(--brass); }
 footer p{ color:var(--muted); font-size:0.88rem; }
 footer .fcol h4{ font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); margin-bottom:16px;}
-footer .fcol a{ display:block; color:var(--cream); opacity:0.85; font-size:0.92rem; margin-bottom:10px; }
+footer .fcol a{ display:flex; align-items:center; gap:9px; color:var(--cream); opacity:0.85; font-size:0.92rem; margin-bottom:10px; }
 footer .fcol a:hover{ color:var(--brass); opacity:1; }
+footer .fcol a svg{ color:var(--brass); flex-shrink:0; opacity:0.9; }
 .bottom-line{ border-top:1px solid var(--line); margin-top:36px; padding-top:20px; color:var(--muted); font-size:0.82rem; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
 
 /* katalog.html sahifa sarlavhasi va to'liq katalog panjarasi */
