@@ -94,21 +94,60 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // ---------- Tizimga kirish / Ro'yxatdan o'tish formalari ----------
-  // ESLATMA: hozircha backend ulanmagan — forma faqat modal oynani yopadi.
-  // Server tayyor bo'lganda shu joyga haqiqiy so'rov (fetch) qo'shiladi.
-  ['loginForm', 'registerForm'].forEach(function (id) {
-    var form = document.getElementById(id);
-    if (!form) return;
-    form.addEventListener('submit', function (e) {
+  // ESLATMA: bu yerda haqiqiy autentifikatsiya (parolni tekshirish) yo'q —
+  // forma shunchaki ism/telefon ma'lumotini Google Sheets'ga yuboradi (lid sifatida)
+  // va modal oynani yopadi. Parol maydoni XAVFSIZLIK sabab hech qayerga yuborilmaydi.
+  function sendToSheets(payload) {
+    var url = window.SHEETS_WEBHOOK_URL;
+    if (!url || url.indexOf('BU_YERGA') !== -1) {
+      console.error('Google Sheets sozlanmagan: sheets-config.js faylida SHEETS_WEBHOOK_URL kiriting.');
+      return;
+    }
+    fetch(url, {
+      method: 'POST',
+      mode: 'no-cors', // Google Apps Script javobini o'qimaymiz, faqat yuboramiz
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    }).catch(function (err) { console.error('Sheets xatoligi:', err); });
+  }
+
+  var loginFormEl = document.getElementById('loginForm');
+  if (loginFormEl) {
+    loginFormEl.addEventListener('submit', function (e) {
       e.preventDefault();
-      var modalEl = form.closest('.modal');
+      var phoneEl = document.getElementById('loginPhone');
+      sendToSheets({
+        type: 'login',
+        phone: phoneEl ? phoneEl.value.trim() : '',
+        page: window.location.pathname
+      });
+      var modalEl = loginFormEl.closest('.modal');
       if (modalEl && window.bootstrap) {
-        var modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
-        modal.hide();
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
       }
-      form.reset();
+      loginFormEl.reset();
     });
-  });
+  }
+
+  var registerFormEl = document.getElementById('registerForm');
+  if (registerFormEl) {
+    registerFormEl.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var nameEl = document.getElementById('regName');
+      var phoneEl = document.getElementById('regPhone');
+      sendToSheets({
+        type: 'register',
+        name: nameEl ? nameEl.value.trim() : '',
+        phone: phoneEl ? phoneEl.value.trim() : '',
+        page: window.location.pathname
+      });
+      var modalEl = registerFormEl.closest('.modal');
+      if (modalEl && window.bootstrap) {
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+      }
+      registerFormEl.reset();
+    });
+  }
 
   // ---------- Bitta modal ichida "Tizimga kirish" / "Ro'yxatdan o'tish" o'rtasida almashish ----------
   document.querySelectorAll('.auth-tab-btn').forEach(function (btn) {

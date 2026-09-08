@@ -204,26 +204,26 @@
         <form id="loginForm" class="auth-panel active" data-panel="login">
           <div class="mb-3">
             <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Telefon raqam</label>
-            <input type="tel" class="form-control form-control-custom" placeholder="+998 __ ___ __ __" required>
+            <input type="tel" id="loginPhone" class="form-control form-control-custom" placeholder="+998 __ ___ __ __" required>
           </div>
           <div class="mb-3">
             <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Parol</label>
-            <input type="password" class="form-control form-control-custom" placeholder="Parolingiz" required>
+            <input type="password" id="loginPassword" class="form-control form-control-custom" placeholder="Parolingiz" required>
           </div>
           <button type="submit" class="btn-brass w-100 mt-2">Kirish</button>
         </form>
         <form id="registerForm" class="auth-panel" data-panel="register">
           <div class="mb-3">
             <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Ismingiz</label>
-            <input type="text" class="form-control form-control-custom" placeholder="Ismingizni kiriting" required>
+            <input type="text" id="regName" class="form-control form-control-custom" placeholder="Ismingizni kiriting" required>
           </div>
           <div class="mb-3">
             <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Telefon raqam</label>
-            <input type="tel" class="form-control form-control-custom" placeholder="+998 __ ___ __ __" required>
+            <input type="tel" id="regPhone" class="form-control form-control-custom" placeholder="+998 __ ___ __ __" required>
           </div>
           <div class="mb-3">
             <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Parol</label>
-            <input type="password" class="form-control form-control-custom" placeholder="Parol yarating" required>
+            <input type="password" id="regPassword" class="form-control form-control-custom" placeholder="Parol yarating" required>
           </div>
           <button type="submit" class="btn-brass w-100 mt-2">Ro'yxatdan o'tish</button>
         </form>
@@ -233,6 +233,7 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="sheets-config.js"></script>
 <script src="java.js"></script>
 </body>
 </html>
