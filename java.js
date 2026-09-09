@@ -1,5 +1,35 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+  // ---------- Telefon raqam maydoni: faqat 9 ta raqam, avtomatik bo'shliqlar (+998 alohida ko'rsatiladi) ----------
+  function setupPhoneInput(el) {
+    if (!el) return;
+    el.addEventListener('input', function () {
+      var digits = el.value.replace(/\D/g, '').slice(0, 9);
+      var parts = [];
+      if (digits.length > 0) parts.push(digits.slice(0, 2));
+      if (digits.length > 2) parts.push(digits.slice(2, 5));
+      if (digits.length > 5) parts.push(digits.slice(5, 7));
+      if (digits.length > 7) parts.push(digits.slice(7, 9));
+      el.value = parts.join(' ');
+    });
+    // Faqat raqam va navigatsiya tugmalarini ruxsat berish (Backspace, Tab, strelkalar va h.k.)
+    el.addEventListener('keydown', function (e) {
+      var allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+      if (allowedKeys.indexOf(e.key) !== -1 || e.ctrlKey || e.metaKey) return;
+      if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+    });
+  }
+
+  ['loginPhone', 'regPhone', 'ordPhone'].forEach(function (id) {
+    setupPhoneInput(document.getElementById(id));
+  });
+
+  // Inputdagi "90 123 45 67" ko'rinishidagi qiymatni "+998901234567" ga aylantiradi
+  function getFullPhone(el) {
+    var digits = el ? el.value.replace(/\D/g, '') : '';
+    return '+998' + digits;
+  }
+
   // ---------- Rang tanlash (swatch) ----------
   var swatchRow = document.getElementById('swatchRow');
   var root = document.documentElement;
@@ -116,9 +146,15 @@ document.addEventListener('DOMContentLoaded', function () {
     loginFormEl.addEventListener('submit', function (e) {
       e.preventDefault();
       var phoneEl = document.getElementById('loginPhone');
+      if (phoneEl && phoneEl.value.replace(/\D/g, '').length !== 9) {
+        phoneEl.classList.add('is-invalid');
+        phoneEl.focus();
+        return;
+      }
+      if (phoneEl) phoneEl.classList.remove('is-invalid');
       sendToSheets({
         type: 'login',
-        phone: phoneEl ? phoneEl.value.trim() : '',
+        phone: getFullPhone(phoneEl),
         page: window.location.pathname
       });
       var modalEl = loginFormEl.closest('.modal');
@@ -135,10 +171,16 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
       var nameEl = document.getElementById('regName');
       var phoneEl = document.getElementById('regPhone');
+      if (phoneEl && phoneEl.value.replace(/\D/g, '').length !== 9) {
+        phoneEl.classList.add('is-invalid');
+        phoneEl.focus();
+        return;
+      }
+      if (phoneEl) phoneEl.classList.remove('is-invalid');
       sendToSheets({
         type: 'register',
         name: nameEl ? nameEl.value.trim() : '',
-        phone: phoneEl ? phoneEl.value.trim() : '',
+        phone: getFullPhone(phoneEl),
         page: window.location.pathname
       });
       var modalEl = registerFormEl.closest('.modal');

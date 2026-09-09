@@ -177,7 +177,7 @@ So'ng barcha fayllarni (yangilangan `index.html`, `index2.html`, `katalog.html`,
 
 ## Telegram botga ulash
 
-Vercel (yoki Netlify) loyihangizning Environment Variables bo'limiga yana bitta
+Netlify loyihangizning Environment Variables bo'limiga yana bitta
 o'zgaruvchi qo'shing:
 ```
 GOOGLE_SHEETS_WEBHOOK_URL = https://script.google.com/macros/s/AKfycb.../exec

@@ -73,7 +73,10 @@
         <form id="loginForm" class="auth-panel active" data-panel="login">
           <div class="mb-3">
             <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Telefon raqam</label>
-            <input type="tel" id="loginPhone" class="form-control form-control-custom" placeholder="+998 __ ___ __ __" required>
+            <div class="input-group phone-input-group">
+              <span class="input-group-text phone-prefix">+998</span>
+              <input type="tel" id="loginPhone" class="form-control form-control-custom" placeholder="90 123 45 67" inputmode="numeric" autocomplete="tel-national" maxlength="12" required>
+            </div>
           </div>
           <div class="mb-3">
             <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Parol</label>
@@ -88,7 +91,10 @@
           </div>
           <div class="mb-3">
             <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Telefon raqam</label>
-            <input type="tel" id="regPhone" class="form-control form-control-custom" placeholder="+998 __ ___ __ __" required>
+            <div class="input-group phone-input-group">
+              <span class="input-group-text phone-prefix">+998</span>
+              <input type="tel" id="regPhone" class="form-control form-control-custom" placeholder="90 123 45 67" inputmode="numeric" autocomplete="tel-national" maxlength="12" required>
+            </div>
           </div>
           <div class="mb-3">
             <label class="form-label" style="color:var(--muted); font-size:0.85rem;">Parol</label>

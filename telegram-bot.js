@@ -1,9 +1,9 @@
 /**
- * INTERAKTIV TELEGRAM BOT — Vercel serverless function
+ * INTERAKTIV TELEGRAM BOT — Netlify Function
  * -----------------------------------------------------------------
  * Bu funksiya "telegram-order.js"dan MUSTAQIL ishlaydi:
- *   - telegram-order.js  → saytdagi forma → sizning chatingizga xabar (bir tomonlama, o'zgarishsiz)
- *   - api/telegram-bot.js → mijoz botga yozganda → mijozga javob va tugmalar (ikki tomonlama)
+ *   - telegram-order.js                      → saytdagi forma → sizning chatingizga xabar (bir tomonlama, o'zgarishsiz)
+ *   - netlify/functions/telegram-bot.js       → mijoz botga yozganda → mijozga javob va tugmalar (ikki tomonlama)
  *
  * Ishlash tartibi:
  *   1. Mijoz botga istalgan matn yozadi (yoki /start bosadi).
@@ -11,15 +11,19 @@
  *   3. Mijoz tugmani bossa (callback_query), bot shu mavzu bo'yicha tayyor javobni yuboradi
  *      va "Menyuga qaytish" tugmasini qo'shadi.
  *
- * Kerakli ENV o'zgaruvchilar (Vercel → Project → Settings → Environment Variables):
- *   TELEGRAM_BOT_TOKEN      — @BotFather bergan token (MAJBURIY)
- *   TELEGRAM_WEBHOOK_SECRET — ixtiyoriy maxfiy so'z (setWebhook'da secret_token bilan bir xil bo'lishi shart)
+ * Kerakli ENV o'zgaruvchilar (Netlify → Site configuration → Environment variables):
+ *   TELEGRAM_BOT_TOKEN        — @BotFather bergan token (MAJBURIY)
+ *   TELEGRAM_WEBHOOK_SECRET   — ixtiyoriy maxfiy so'z (setWebhook'da secret_token bilan bir xil bo'lishi shart)
  *   GOOGLE_SHEETS_WEBHOOK_URL — ixtiyoriy: Google Apps Script Web App manzili.
  *                               Berilsa, botga yozgan har bir yangi mijoz (chat_id) haqida
  *                               ma'lumot "Telegram foydalanuvchilari" varag'iga yoziladi.
  *
- * Bu fayl repo tub papkasidagi /api/ ichida turishi shart — Vercel shu papkani
- * avtomatik function sifatida tanib oladi, qo'shimcha konfiguratsiya shart emas.
+ * MUHIM: bu fayl repo ichida aynan shu yo'lda turishi shart —
+ *   netlify/functions/telegram-bot.js
+ * `netlify.toml` shu papkani function sifatida ko'rsatadi, qo'shimcha
+ * konfiguratsiya shart emas. Netlify Functions Vercel'dan farqli formatda
+ * yoziladi (bu yerda `exports.handler = async (event) => {...}` va
+ * javob `{ statusCode, body }` ko'rinishida qaytariladi — `req`/`res` emas).
  */
 
 const TELEGRAM_API = 'https://api.telegram.org/bot';
@@ -119,37 +123,36 @@ function sendAnswer(chatId, text) {
   });
 }
 
-module.exports = async function handler(req, res) {
-  console.log('telegram-bot chaqirildi, method:', req.method);
+exports.handler = async function (event) {
+  console.log('telegram-bot chaqirildi, method:', event.httpMethod);
 
-  if (req.method !== 'POST') {
-    res.status(200).send('telegram-bot funksiyasi ishlayapti (faqat POST qabul qiladi)');
-    return;
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 200, body: 'telegram-bot funksiyasi ishlayapti (faqat POST qabul qiladi)' };
   }
 
   if (!process.env.TELEGRAM_BOT_TOKEN) {
     console.error('TELEGRAM_BOT_TOKEN environment variable topilmadi!');
-    res.status(500).send('TELEGRAM_BOT_TOKEN sozlanmagan');
-    return;
+    return { statusCode: 500, body: 'TELEGRAM_BOT_TOKEN sozlanmagan' };
   }
 
   // Ixtiyoriy: webhook so'rovi haqiqatan Telegramdan kelayotganini tekshirish
   var secret = process.env.TELEGRAM_WEBHOOK_SECRET;
   if (secret) {
-    var got = req.headers['x-telegram-bot-api-secret-token'];
+    var headers = event.headers || {};
+    var got = headers['x-telegram-bot-api-secret-token'] || headers['X-Telegram-Bot-Api-Secret-Token'];
     if (got !== secret) {
       console.error('Webhook secret mos kelmadi.');
-      res.status(401).send('unauthorized');
-      return;
+      return { statusCode: 401, body: 'unauthorized' };
     }
   }
 
-  // Vercel odatda req.body'ni avtomatik JSON qilib parse qiladi (Content-Type: application/json bo'lsa)
-  var update = req.body;
-  if (typeof update === 'string') {
-    try { update = JSON.parse(update); } catch (e) { update = {}; }
+  // Netlify har doim event.body'ni matn (string) sifatida beradi — o'zimiz JSON qilib o'qiymiz
+  var update = {};
+  try {
+    update = JSON.parse(event.body || '{}');
+  } catch (e) {
+    update = {};
   }
-  update = update || {};
 
   try {
     if (update.callback_query) {
@@ -177,5 +180,5 @@ module.exports = async function handler(req, res) {
     console.error('telegram-bot ichki xatoligi:', err);
   }
 
-  res.status(200).send('ok');
+  return { statusCode: 200, body: 'ok' };
 };
