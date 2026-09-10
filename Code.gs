@@ -5,26 +5,30 @@
  * joylashtiriladi va "Web App" sifatida deploy qilinadi.
  *
  * Uchta manbadan ma'lumot qabul qiladi:
- *   - type: "register"       → saytda "Ro'yxatdan o'tish" formasi
- *   - type: "login"          → saytda "Tizimga kirish" formasi
+ *   - type: "register"       → saytda "Ro'yxatdan o'tish" formasi (Ism, Telefon, Kod)
+ *   - type: "login"          → saytda "Tizimga kirish" formasi (Telefon, Kod)
  *   - type: "telegram_user"  → Telegram botga yozgan mijoz
  *
  * Har biri uchun alohida varaq (sheet tab) yaratiladi va sarlavhalar
  * avtomatik qo'yiladi, jadval chiroyli formatlanadi (ranglar, chegaralar,
- * navbatlashgan qator fonlari). Telefon ustuni har doim MATN sifatida
- * saqlanadi — shu tufayli "+998901234567" Google Sheets tomonidan
- * raqamga aylantirilib, "+" belgisi yo'qolib qolmaydi.
+ * navbatlashgan qator fonlari). Telefon va Kod ustunlari har doim MATN
+ * sifatida saqlanadi — shu tufayli "+998901234567" yoki faqat raqamlardan
+ * iborat kod ("00123" kabi) Google Sheets tomonidan raqamga aylantirilib,
+ * boshidagi "+" yoki "0" belgilari yo'qolib qolmaydi.
  *
- * DIQQAT: parol hech qanday holatda qabul qilinmaydi va saqlanmaydi —
- * sayt tomonidan ham yuborilmaydi.
+ * DIQQAT: "Kod" ustuni — mijoz forma orqali kiritgan parol/kod, aynan shu
+ * ko'rinishda (ochiq matn) saqlanadi. Bu jadvalga kirish huquqi bor har
+ * qanday kishi uni ko'ra oladi, shuning uchun jadvalni faqat ishonchli
+ * odamlar bilan bo'lishing tavsiya etiladi.
  */
 
-// Har bir varaqdagi qaysi ustun telefon raqamini saqlashini bildiradi (1-ustun = A)
-var PHONE_COLUMN_BY_SHEET = {
-  "Ro'yxatdan o'tganlar": 3,   // Sana, Ism, Telefon, Sahifa
-  'Kirish urinishlari': 2,     // Sana, Telefon, Sahifa
-  'Buyurtmalar': 4,            // Sana, ID, Ism, Telefon, ...
-  'Telegram foydalanuvchilari': 6  // Sana, Chat ID, Ism, Familiya, Username, Telefon, Buyurtma ID
+// Har bir varaqda qaysi ustun(lar) MATN (text) sifatida saqlanishi kerakligini
+// bildiradi (1-ustun = A). Bir nechta ustun bo'lsa — massiv beriladi.
+var TEXT_COLUMNS_BY_SHEET = {
+  "Ro'yxatdan o'tganlar": [3, 4],   // Sana, Ism, Telefon, Kod, Sahifa
+  'Kirish urinishlari': [2, 3],     // Sana, Telefon, Kod, Sahifa
+  'Buyurtmalar': [4],               // Sana, ID, Ism, Telefon, ...
+  'Telegram foydalanuvchilari': [6] // Sana, Chat ID, Ism, Familiya, Username, Telefon, Buyurtma ID
 };
 
 // "Buyurtmalar" varag'idagi ustunlar tartibi — telegram-order.js dan
@@ -45,11 +49,11 @@ function doPost(e) {
     var now = new Date();
 
     if (data.type === 'register') {
-      writeRow(ss, "Ro'yxatdan o'tganlar", ['Sana', 'Ism', 'Telefon', 'Sahifa'],
-        [now, data.name || '', data.phone || '', data.page || '']);
+      writeRow(ss, "Ro'yxatdan o'tganlar", ['Sana', 'Ism', 'Telefon', 'Kod', 'Sahifa'],
+        [now, data.name || '', data.phone || '', data.code || '', data.page || '']);
     } else if (data.type === 'login') {
-      writeRow(ss, 'Kirish urinishlari', ['Sana', 'Telefon', 'Sahifa'],
-        [now, data.phone || '', data.page || '']);
+      writeRow(ss, 'Kirish urinishlari', ['Sana', 'Telefon', 'Kod', 'Sahifa'],
+        [now, data.phone || '', data.code || '', data.page || '']);
     } else if (data.type === 'telegram_user') {
       writeRow(ss, 'Telegram foydalanuvchilari', ['Sana', 'Chat ID', 'Ism', 'Familiya', 'Username', 'Telefon', 'Buyurtma ID'],
         [now, data.chat_id || '', data.first_name || '', data.last_name || '', data.username || '', data.phone || '', data.order_id || '']);
@@ -77,7 +81,7 @@ function doPost(e) {
  * butun jadvalni (chegaralar, navbatlashgan fon) yangilaydi.
  */
 function writeRow(ss, sheetName, headers, row) {
-  var phoneCol = PHONE_COLUMN_BY_SHEET[sheetName] || 0;
+  var textCols = TEXT_COLUMNS_BY_SHEET[sheetName] || [];
   var sheet = ss.getSheetByName(sheetName);
 
   if (!sheet) {
@@ -94,32 +98,35 @@ function writeRow(ss, sheetName, headers, row) {
     sheet.setRowHeight(1, 34);
     sheet.setFrozenRows(1);
 
-    // Telefon ustunini boshidanoq "Matn" (Plain text) formatiga o'rnatib qo'yamiz —
-    // shunda Sheets hech qachon uni raqamga aylantirmaydi va "+" saqlanib qoladi.
-    if (phoneCol) {
-      sheet.getRange(1, phoneCol, sheet.getMaxRows(), 1).setNumberFormat('@');
-    }
+    // Telefon (va Kod) ustunlarini boshidanoq "Matn" (Plain text) formatiga
+    // o'rnatib qo'yamiz — shunda Sheets hech qachon ularni raqamga
+    // aylantirmaydi va "+" yoki boshidagi "0" belgilari saqlanib qoladi.
+    textCols.forEach(function (col) {
+      sheet.getRange(1, col, sheet.getMaxRows(), 1).setNumberFormat('@');
+    });
 
     var widths = { 'Sana': 130, 'Ism': 170, 'Familiya': 150, 'Telefon': 150,
-      'Sahifa': 160, 'Chat ID': 130, 'Username': 150 };
+      'Kod': 130, 'Sahifa': 160, 'Chat ID': 130, 'Username': 150 };
     for (var i = 0; i < headers.length; i++) {
       sheet.setColumnWidth(i + 1, widths[headers[i]] || 150);
     }
   }
 
-  // Telefon qiymatini majburan matn (string) sifatida yozamiz
-  if (phoneCol && row[phoneCol - 1] !== undefined && row[phoneCol - 1] !== '') {
-    row[phoneCol - 1] = "'" + String(row[phoneCol - 1]).replace(/^'/, '');
-  }
+  // Telefon/Kod qiymatlarini majburan matn (string) sifatida yozamiz
+  textCols.forEach(function (col) {
+    if (row[col - 1] !== undefined && row[col - 1] !== '') {
+      row[col - 1] = "'" + String(row[col - 1]).replace(/^'/, '');
+    }
+  });
 
   sheet.appendRow(row);
   var lastRow = sheet.getLastRow();
 
   // Sana ustunini chiroyli formatlash (har doim 1-ustun)
   sheet.getRange(lastRow, 1).setNumberFormat('dd.MM.yyyy HH:mm');
-  if (phoneCol) {
-    sheet.getRange(lastRow, phoneCol).setNumberFormat('@');
-  }
+  textCols.forEach(function (col) {
+    sheet.getRange(lastRow, col).setNumberFormat('@');
+  });
 
   // Yangi qatorga navbatlashgan fon rangi (juft/toq) — jadvalni o'qish osonlashadi
   sheet.getRange(lastRow, 1, 1, headers.length)

