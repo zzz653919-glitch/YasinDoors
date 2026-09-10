@@ -22,8 +22,14 @@
 // Har bir varaqdagi qaysi ustun telefon raqamini saqlashini bildiradi (1-ustun = A)
 var PHONE_COLUMN_BY_SHEET = {
   "Ro'yxatdan o'tganlar": 3,   // Sana, Ism, Telefon, Sahifa
-  'Kirish urinishlari': 2      // Sana, Telefon, Sahifa
+  'Kirish urinishlari': 2,     // Sana, Telefon, Sahifa
+  'Buyurtmalar': 4             // Sana, ID, Ism, Telefon, ...
 };
+
+// "Buyurtmalar" varag'idagi ustunlar tartibi — telegram-order.js dan
+// keladigan maydonlar bilan mos kelishi shart
+var ORDER_HEADERS = ['Sana', 'ID', 'Ism', 'Telefon', 'Model', 'Seriya',
+  "O'lcham", 'Rang', 'Miqdor', 'Umumiy narx', 'Zalog', 'Manzil', 'Xarita havolasi', 'Sahifa'];
 
 var HEADER_BG = '#c9a44c';
 var HEADER_FONT = '#17130f';
@@ -46,6 +52,14 @@ function doPost(e) {
     } else if (data.type === 'telegram_user') {
       writeRow(ss, 'Telegram foydalanuvchilari', ['Sana', 'Chat ID', 'Ism', 'Familiya', 'Username'],
         [now, data.chat_id || '', data.first_name || '', data.last_name || '', data.username || '']);
+    } else if (data.type === 'order') {
+      // Mijoz saytda buyurtma bergan — keyinroq Telegram bot shu yozuvni
+      // ID bo'yicha topib, mijozga shaxsiy tasdiqlash xabarini yuboradi
+      writeRow(ss, 'Buyurtmalar', ORDER_HEADERS,
+        [now, data.id || '', data.name || '', data.phone || '', data.model || '',
+         data.series || '', data.size || '', data.color || '', data.quantity || '',
+         data.total || '', data.deposit || '', data.address || '', data.map_link || '',
+         data.page || '']);
     }
 
     return ContentService.createTextOutput(JSON.stringify({ ok: true }))
@@ -117,8 +131,78 @@ function writeRow(ss, sheetName, headers, row) {
 }
 
 /**
- * Brauzerda ochib tekshirish uchun (GET so'rov) — funksiya ishlayotganini bildiradi.
+ * GET so'rov: odatda brauzerda ochib tekshirish uchun ishlatiladi.
+ * Lekin Telegram bot funksiyasi (netlify/functions/telegram-bot.js)
+ * ham shu manzilga ?action=getOrder&id=<ID> ko'rinishida murojaat qilib,
+ * mijoz "Start" bosgan buyurtma haqidagi ma'lumotni JSON ko'rinishida oladi.
  */
 function doGet(e) {
+  var params = (e && e.parameter) || {};
+  if (params.action === 'getOrder' && params.id) {
+    return findOrderById(params.id);
+  }
+  if (params.action === 'getOrdersByPhone' && params.phone) {
+    return findOrdersByPhone(params.phone);
+  }
   return ContentService.createTextOutput('YasinDoors Sheets qabul qiluvchisi ishlayapti.');
+}
+
+// Faqat raqamlarni qoldiradi, taqqoslash uchun (masalan "+998 90 123-45-67" -> "998901234567")
+function onlyDigits(s) {
+  return String(s || '').replace(/\D/g, '');
+}
+
+function findOrdersByPhone(phone) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Buyurtmalar');
+  var orders = [];
+  var target = onlyDigits(phone).slice(-9); // oxirgi 9 ta raqam bo'yicha solishtiramiz (998 kodisiz)
+
+  if (sheet && target) {
+    var values = sheet.getDataRange().getValues();
+    var headers = values[0];
+    var phoneCol = headers.indexOf('Telefon');
+    var dateCol = headers.indexOf('Sana');
+    if (phoneCol !== -1) {
+      for (var i = 1; i < values.length; i++) {
+        if (onlyDigits(values[i][phoneCol]).slice(-9) === target) {
+          var order = {};
+          headers.forEach(function (h, idx) { order[h] = values[i][idx]; });
+          orders.push(order);
+        }
+      }
+    }
+    // Eng yangi buyurtma birinchi bo'lib chiqsin
+    if (dateCol !== -1) {
+      orders.sort(function (a, b) { return new Date(b['Sana']) - new Date(a['Sana']); });
+    }
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ ok: true, orders: orders }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function findOrderById(id) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Buyurtmalar');
+  var result = { ok: false };
+
+  if (sheet) {
+    var values = sheet.getDataRange().getValues();
+    var headers = values[0];
+    var idCol = headers.indexOf('ID');
+    if (idCol !== -1) {
+      for (var i = 1; i < values.length; i++) {
+        if (String(values[i][idCol]) === String(id)) {
+          var order = {};
+          headers.forEach(function (h, idx) { order[h] = values[i][idx]; });
+          result = { ok: true, order: order };
+          break;
+        }
+      }
+    }
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
 }

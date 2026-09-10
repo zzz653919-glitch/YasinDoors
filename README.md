@@ -192,3 +192,94 @@ Google Sheets faylingizda avtomatik uchta varaq (tab) paydo bo'ladi:
 har birida sarlavha qatori tilla rangda ajratilgan, yangi ma'lumot har doim
 oxiriga qo'shiladi.
 
+---
+
+# 4-QISM — Mijozning o'ziga buyurtma haqida Telegram xabari
+
+Hozirgacha buyurtma haqidagi xabar faqat **sizga** (do'kon egasiga) kelardi.
+Endi mijoz ham o'z buyurtmasi haqida **shaxsiy Telegram xabarini** olishi
+mumkin.
+
+## Nega bu bosqichli ishlaydi
+
+Telegram qoidasi shunday: **bot hech qachon birinchi bo'lib begona odamga
+yoza olmaydi** — faqat foydalanuvchi botga avval o'zi yozgan (yoki "Start"
+bosgan) bo'lsa, bot unga javob qaytara oladi. Shu sababli mijozning telefon
+raqamiga qarab avtomatik xabar yuborib bo'lmaydi.
+
+Shuning uchun jarayon shunday quriladi:
+
+1. Mijoz saytda buyurtma beradi → xabar avvalgidek **sizga** ketadi, va
+   buyurtma noyob ID bilan Google Sheets'ning yangi **"Buyurtmalar"**
+   varag'iga yoziladi.
+2. Muvaffaqiyat sahifasida mijozga **"📲 Buyurtmani Telegramda kuzatish"**
+   tugmasi chiqadi — bu tugma uni to'g'ridan-to'g'ri sizning botingizga
+   (`t.me/<bot_username>?start=o_<ID>`) olib boradi.
+3. Mijoz botda "Start" bosishi bilan (bu — uning botga yozgan birinchi
+   xabari), bot avtomatik ravishda o'sha ID bo'yicha buyurtma tafsilotlarini
+   Google Sheets'dan topib, mijozga **shaxsiy tasdiqlash xabarini** yuboradi
+   (model, o'lcham, rang, narx, zalog va h.k.).
+
+Agar mijoz tugmani bosmasa — hech narsa buzilmaydi, faqat u shaxsiy
+tasdiqlash xabarini olmaydi; sizga ketadigan asosiy xabar baribir keladi.
+
+## O'rnatish (qo'shimcha 2 qadam)
+
+Agar 1—3-qismlarni allaqachon sozlagan bo'lsangiz (bot token, chat ID,
+Google Sheets webhook), faqat quyidagilarni qiling:
+
+1. `telegram-config.js` faylida yangi qatorni to'ldiring:
+   ```js
+   window.TELEGRAM_BOT_USERNAME = 'sizning_bot_username'; // @ belgisisiz
+   ```
+   (Botingiz nomini bilmasangiz — Telegram'da botingiz profiliga kiring,
+   `@username` qismini @ belgisisiz shu yerga yozing.)
+2. Google Sheets'dagi Apps Script kodini yangilangan `Code.gs` fayli bilan
+   almashtiring (**Deploy → Manage deployments → tahrirlash belgisi →
+   Version: New version → Deploy**) — bu shart, aks holda bot buyurtmani
+   topa olmaydi.
+3. `netlify/functions/telegram-bot.js` faylini yangilangan nusxa bilan
+   almashtirib, GitHub'ga push qiling (Netlify avtomatik qayta deploy
+   qiladi).
+4. Yangilangan `buyurtma.html`, `buyurtma2.html`, `telegram-order.js`,
+   `telegram-config.js` fayllarini hostingingizga qayta yuklang.
+
+Shu bilan tayyor — endi mijoz ham o'z buyurtmasi haqida Telegramda shaxsiy
+xabar oladi.
+
+---
+
+# 5-QISM — Bosh sahifa/katalogdagi umumiy "Buyurtmalarimni ko'rish" tugmasi
+
+Endi bosh sahifa va katalog sahifalarining pastki qismida (Aloqa bo'limida)
+**"Buyurtmalarimni Telegramda ko'rish"** havolasi ham chiqadi (4-QISM'dagi
+TELEGRAM_BOT_USERNAME to'ldirilgan bo'lsa avtomatik ko'rinadi).
+
+Bu yerda aniq buyurtma ID'si yo'q, shuning uchun boshqacha ishlaydi:
+
+1. Mijoz tugmani bosib botga o'tadi va "Start" beradi.
+2. Bot mijozdan **"📞 Telefon raqamimni yuborish"** tugmasi orqali (erkin
+   yozmasdan, bitta bosish bilan) telefon raqamini so'raydi.
+3. Bot shu raqam bo'yicha Google Sheets'dagi **"Buyurtmalar"** varag'idan
+   mijozning barcha buyurtmalarini topib, har birini chiroyli qilib
+   (model, o'lcham, rang, narx, zalog) ro'yxat ko'rinishida yuboradi.
+
+Bu ham 1—4-qismlardagi bir xil sozlamalardan (bot token, chat ID, Google
+Sheets webhook, bot username) foydalanadi — qo'shimcha sozlash shart emas,
+faqat `Code.gs` va `telegram-bot.js` ning yangi nusxalarini joylashtiring.
+
+## Ikonlar
+
+Yangi qo'shilgan barcha Telegram tugmalari (💬 emoji o'rniga) saytning
+o'zidagi chiziqli SVG-ikon uslubida (`stroke="currentColor"`, brass rang)
+qilib qayta ishlandi — shu bilan boshqa ikonlar (telefon, manzil va h.k.)
+bilan bir xil ko'rinishga ega.
+
+## Buyurtmalarni Excel formatida olish
+
+Alohida hech narsa qurish shart emas — buyurtmalar allaqachon Google
+Sheets'ning **"Buyurtmalar"** varag'iga tushib turibdi. Excel fayl sifatida
+olish uchun: Google Sheets'ni oching → **Fayl → Yuklab olish → Microsoft
+Excel (.xlsx)**. Har safar eng so'nggi holatni shunday yuklab olishingiz
+mumkin.
+

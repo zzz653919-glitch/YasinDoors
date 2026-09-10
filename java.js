@@ -1,5 +1,29 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+  // ---------- "Buyurtmalarimni Telegramda ko'rish" havolalari ----------
+  // Botga umumiy start havolasi bilan o'tadi (?start=my_orders); bot mijozdan
+  // telefon raqamini (tugma orqali) so'rab, o'sha raqamga tegishli barcha
+  // buyurtmalarni topib chiroyli qilib chiqarib beradi.
+  (function () {
+    var botUsername = window.TELEGRAM_BOT_USERNAME;
+    var ready = botUsername && String(botUsername).indexOf('BU_YERGA') === -1;
+    var href = ready ? ('https://t.me/' + String(botUsername).replace(/^@/, '') + '?start=my_orders') : null;
+
+    document.querySelectorAll('.telegram-orders-link').forEach(function (el) {
+      var wrapCard = el.closest('.telegram-orders-card');
+      if (ready) {
+        el.href = href;
+        el.target = '_blank';
+        el.rel = 'noopener';
+        el.style.display = 'flex';
+        if (wrapCard) wrapCard.style.display = 'block';
+      } else {
+        el.style.display = 'none';
+        if (wrapCard) wrapCard.style.display = 'none';
+      }
+    });
+  })();
+
   // ---------- Telefon raqam maydoni: faqat 9 ta raqam, avtomatik bo'shliqlar (+998 alohida ko'rsatiladi) ----------
   function setupPhoneInput(el) {
     if (!el) return;

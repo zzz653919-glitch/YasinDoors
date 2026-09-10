@@ -104,6 +104,141 @@ function logTelegramUser(msg) {
   });
 }
 
+function formatSom(num) {
+  var n = Math.round(Number(num) || 0);
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + " so'm";
+}
+
+// Google Sheets'dagi "Buyurtmalar" varag'idan ID bo'yicha buyurtmani topib olish
+// (Code.gs dagi doGet ?action=getOrder&id=... orqali)
+async function fetchOrderById(id) {
+  var url = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+  if (!url) return null;
+  try {
+    var sep = url.indexOf('?') === -1 ? '?' : '&';
+    var res = await fetch(url + sep + 'action=getOrder&id=' + encodeURIComponent(id));
+    var data = await res.json();
+    return (data && data.ok) ? data.order : null;
+  } catch (err) {
+    console.error('Buyurtmani Sheets\'dan olishda xatolik:', err);
+    return null;
+  }
+}
+
+function buildOrderConfirmText(order) {
+  var lines = [
+    '✅ <b>Buyurtmangiz qabul qilindi!</b>',
+    '',
+    '🚪 Model: ' + (order['Model'] || '—') + (order['Seriya'] ? ' (' + order['Seriya'] + ')' : ''),
+  ];
+  if (order["O'lcham"]) lines.push("📏 O'lcham: " + order["O'lcham"]);
+  lines.push('🎨 Rang: ' + (order['Rang'] || '—'));
+  lines.push('🔢 Miqdor: ' + (order['Miqdor'] || '—') + ' dona');
+  lines.push('💰 Umumiy: ' + formatSom(order['Umumiy narx']));
+  lines.push('💵 Zalog (20%): ' + formatSom(order['Zalog']));
+  if (order['Xarita havolasi']) lines.push('🗺 <a href="' + order['Xarita havolasi'] + '">Yetkazish manzili</a>');
+  lines.push('');
+  lines.push("Tez orada mutaxassisimiz zalog to'lovi bo'yicha siz bilan bog'lanadi.");
+  return lines.join('\n');
+}
+
+// Mijoz "https://t.me/BOT?start=o_<ID>" havolasini bosib botga birinchi
+// marta yozganda ishga tushadi — shu zahoti uning chat ID'si ma'lum bo'ladi
+// va aynan shu buyurtma haqida shaxsiy xabar yuboriladi.
+async function handleOrderStart(chatId, payload, msg) {
+  await logTelegramUser(msg);
+
+  var orderId = payload.indexOf('o_') === 0 ? payload.slice(2) : payload;
+  var order = await fetchOrderById(orderId);
+
+  if (!order) {
+    await callTelegram('sendMessage', {
+      chat_id: chatId,
+      text: "Kechirasiz, bu buyurtma topilmadi. Savolingiz bo'lsa, operator bilan bog'laning.",
+      reply_markup: BACK_KEYBOARD
+    });
+    return;
+  }
+
+  await callTelegram('sendMessage', {
+    chat_id: chatId,
+    text: buildOrderConfirmText(order),
+    parse_mode: 'HTML',
+    disable_web_page_preview: false,
+    reply_markup: BACK_KEYBOARD
+  });
+}
+
+async function fetchOrdersByPhone(phone) {
+  var url = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+  if (!url) return [];
+  try {
+    var sep = url.indexOf('?') === -1 ? '?' : '&';
+    var res = await fetch(url + sep + 'action=getOrdersByPhone&phone=' + encodeURIComponent(phone));
+    var data = await res.json();
+    return (data && data.ok && data.orders) ? data.orders : [];
+  } catch (err) {
+    console.error('Buyurtmalarni telefon bo\'yicha olishda xatolik:', err);
+    return [];
+  }
+}
+
+function buildOneOrderBlock(order, index) {
+  var lines = [
+    '📦 <b>Buyurtma ' + index + '</b>',
+    '🚪 Model: ' + (order['Model'] || '—') + (order['Seriya'] ? ' (' + order['Seriya'] + ')' : '')
+  ];
+  if (order["O'lcham"]) lines.push("📏 O'lcham: " + order["O'lcham"]);
+  lines.push('🎨 Rang: ' + (order['Rang'] || '—'));
+  lines.push('🔢 Miqdor: ' + (order['Miqdor'] || '—') + ' dona');
+  lines.push('💰 Umumiy: ' + formatSom(order['Umumiy narx']));
+  lines.push('💵 Zalog (20%): ' + formatSom(order['Zalog']));
+  return lines.join('\n');
+}
+
+// "📞 Telefon raqamimni yuborish" — bitta bosishda ulashiladigan tugma
+// (mijoz erkin matn yozmaydi, faqat shu tugmani bosadi)
+var CONTACT_REQUEST_KEYBOARD = {
+  keyboard: [[{ text: '📞 Telefon raqamimni yuborish', request_contact: true }]],
+  resize_keyboard: true,
+  one_time_keyboard: true
+};
+
+async function handleMyOrdersStart(chatId) {
+  await callTelegram('sendMessage', {
+    chat_id: chatId,
+    text: "Buyurtmalaringizni ko'rsatish uchun telefon raqamingizni tasdiqlang — pastdagi tugmani bosing:",
+    reply_markup: CONTACT_REQUEST_KEYBOARD
+  });
+}
+
+async function handleContactShared(chatId, contact, msg) {
+  await logTelegramUser(msg);
+  var orders = await fetchOrdersByPhone(contact.phone_number);
+
+  // Reply keyboard'ni olib tashlaymiz
+  if (!orders.length) {
+    await callTelegram('sendMessage', {
+      chat_id: chatId,
+      text: "Sizning raqamingiz bo'yicha hozircha buyurtma topilmadi.",
+      reply_markup: { remove_keyboard: true }
+    });
+    await sendMenu(chatId);
+    return;
+  }
+
+  var text = '🗂 <b>Sizning buyurtmalaringiz</b> (' + orders.length + " ta):\n\n" +
+    orders.map(function (o, i) { return buildOneOrderBlock(o, i + 1); }).join('\n\n') +
+    "\n\nTez orada mutaxassisimiz zalog to'lovi bo'yicha siz bilan bog'lanadi.";
+
+  await callTelegram('sendMessage', {
+    chat_id: chatId,
+    text: text,
+    parse_mode: 'HTML',
+    reply_markup: { remove_keyboard: true }
+  });
+}
+
 function sendMenu(chatId) {
   return callTelegram('sendMessage', {
     chat_id: chatId,
@@ -171,8 +306,29 @@ exports.handler = async function (event) {
       }
     } else if (update.message) {
       var msgChatId = update.message.chat.id;
-      await logTelegramUser(update.message);
-      await sendMenu(msgChatId);
+      var text = update.message.text || '';
+
+      if (update.message.contact) {
+        // Mijoz "📞 Telefon raqamimni yuborish" tugmasini bosdi
+        await handleContactShared(msgChatId, update.message.contact, update.message);
+      } else if (text.indexOf('/start') === 0) {
+        var payload = text.slice(6).trim(); // "/start" dan keyingi qism (bo'sh bo'lishi ham mumkin)
+        if (payload === 'my_orders') {
+          // Bosh sahifa/katalogdagi umumiy "Buyurtmalarimni ko'rish" havolasi orqali kelgan
+          await logTelegramUser(update.message);
+          await handleMyOrdersStart(msgChatId);
+        } else if (payload) {
+          // Mijoz saytdagi "Telegramda kuzatish" havolasi orqali kelgan —
+          // buyurtmasi haqida shaxsiy tasdiqlash xabari yuboriladi
+          await handleOrderStart(msgChatId, payload, update.message);
+        } else {
+          await logTelegramUser(update.message);
+          await sendMenu(msgChatId);
+        }
+      } else {
+        await logTelegramUser(update.message);
+        await sendMenu(msgChatId);
+      }
     } else {
       console.log('Kutilmagan update turi:', JSON.stringify(update));
     }
