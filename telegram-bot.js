@@ -84,11 +84,12 @@ var HOURS_INFO_TEXT =
 // takroriy yozuvlarning oldini olishning hojati yo'q — Apps Script tomonida
 // har bir xabar alohida qator sifatida qo'shiladi, bu qasddan shunday: shu tariqa
 // mijozning necha marta yozganini ham ko'rish mumkin.
-function logTelegramUser(msg) {
+function logTelegramUser(msg, extra) {
   var url = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
   if (!url) return Promise.resolve();
 
   var from = msg.from || {};
+  extra = extra || {};
   return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' }, // Apps Script uchun eng ishonchli format
@@ -97,7 +98,9 @@ function logTelegramUser(msg) {
       chat_id: msg.chat.id,
       first_name: from.first_name || '',
       last_name: from.last_name || '',
-      username: from.username || ''
+      username: from.username || '',
+      phone: extra.phone || '',       // mijoz "Telefon raqamimni yuborish" tugmasini bossa
+      order_id: extra.order_id || ''  // mijoz "Telegramda kuzatish" havolasi orqali kelsa
     })
   }).catch(function (err) {
     console.error('Google Sheets xatoligi:', err);
@@ -146,9 +149,9 @@ function buildOrderConfirmText(order) {
 // marta yozganda ishga tushadi — shu zahoti uning chat ID'si ma'lum bo'ladi
 // va aynan shu buyurtma haqida shaxsiy xabar yuboriladi.
 async function handleOrderStart(chatId, payload, msg) {
-  await logTelegramUser(msg);
-
   var orderId = payload.indexOf('o_') === 0 ? payload.slice(2) : payload;
+  await logTelegramUser(msg, { order_id: orderId });
+
   var order = await fetchOrderById(orderId);
 
   if (!order) {
@@ -213,7 +216,7 @@ async function handleMyOrdersStart(chatId) {
 }
 
 async function handleContactShared(chatId, contact, msg) {
-  await logTelegramUser(msg);
+  await logTelegramUser(msg, { phone: contact.phone_number });
   var orders = await fetchOrdersByPhone(contact.phone_number);
 
   // Reply keyboard'ni olib tashlaymiz

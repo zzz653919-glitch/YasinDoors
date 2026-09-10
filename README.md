@@ -283,3 +283,19 @@ olish uchun: Google Sheets'ni oching → **Fayl → Yuklab olish → Microsoft
 Excel (.xlsx)**. Har safar eng so'nggi holatni shunday yuklab olishingiz
 mumkin.
 
+---
+
+# 6-QISM — Bot orqali telefon/buyurtma bog'lanishi
+
+Sayt orqali kelgan **har qanday buyurtma** — mijoz botga umuman yozmasa
+ham — avvalgidek to'liq **"Buyurtmalar"** varag'iga saqlanadi (3—4-qismlar).
+
+Qo'shimcha ravishda, endi mijoz botda telefon raqamini ulashsa yoki
+"Telegramda kuzatish" havolasi orqali buyurtmasini tasdiqlasa, bu ham
+**"Telegram foydalanuvchilari"** varag'iga (yangi **Telefon** va
+**Buyurtma ID** ustunlari bilan) yoziladi — shunda qaysi Telegram chat
+qaysi mijoz/buyurtmaga tegishli ekanini ko'rish mumkin bo'ladi.
+
+O'rnatish uchun faqat yangilangan `Code.gs` va `telegram-bot.js`ni
+joylashtirish yetarli (qo'shimcha sozlama shart emas).
+

@@ -23,7 +23,8 @@
 var PHONE_COLUMN_BY_SHEET = {
   "Ro'yxatdan o'tganlar": 3,   // Sana, Ism, Telefon, Sahifa
   'Kirish urinishlari': 2,     // Sana, Telefon, Sahifa
-  'Buyurtmalar': 4             // Sana, ID, Ism, Telefon, ...
+  'Buyurtmalar': 4,            // Sana, ID, Ism, Telefon, ...
+  'Telegram foydalanuvchilari': 6  // Sana, Chat ID, Ism, Familiya, Username, Telefon, Buyurtma ID
 };
 
 // "Buyurtmalar" varag'idagi ustunlar tartibi — telegram-order.js dan
@@ -50,8 +51,8 @@ function doPost(e) {
       writeRow(ss, 'Kirish urinishlari', ['Sana', 'Telefon', 'Sahifa'],
         [now, data.phone || '', data.page || '']);
     } else if (data.type === 'telegram_user') {
-      writeRow(ss, 'Telegram foydalanuvchilari', ['Sana', 'Chat ID', 'Ism', 'Familiya', 'Username'],
-        [now, data.chat_id || '', data.first_name || '', data.last_name || '', data.username || '']);
+      writeRow(ss, 'Telegram foydalanuvchilari', ['Sana', 'Chat ID', 'Ism', 'Familiya', 'Username', 'Telefon', 'Buyurtma ID'],
+        [now, data.chat_id || '', data.first_name || '', data.last_name || '', data.username || '', data.phone || '', data.order_id || '']);
     } else if (data.type === 'order') {
       // Mijoz saytda buyurtma bergan — keyinroq Telegram bot shu yozuvni
       // ID bo'yicha topib, mijozga shaxsiy tasdiqlash xabarini yuboradi
