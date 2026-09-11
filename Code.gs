@@ -8,6 +8,8 @@
  *   - type: "register"       → saytda "Ro'yxatdan o'tish" formasi (Ism, Telefon, Kod)
  *   - type: "login"          → saytda "Tizimga kirish" formasi (Telefon, Kod)
  *   - type: "telegram_user"  → Telegram botga yozgan mijoz
+ *   - type: "order"          → saytda berilgan buyurtma
+ *   - type: "set_pending"    → bot ichki holati (qaysi buyruq kutilmoqda)
  *
  * Har biri uchun alohida varaq (sheet tab) yaratiladi va sarlavhalar
  * avtomatik qo'yiladi, jadval chiroyli formatlanadi (ranglar, chegaralar,
@@ -57,6 +59,12 @@ function doPost(e) {
     } else if (data.type === 'telegram_user') {
       writeRow(ss, 'Telegram foydalanuvchilari', ['Sana', 'Chat ID', 'Ism', 'Familiya', 'Username', 'Telefon', 'Buyurtma ID'],
         [now, data.chat_id || '', data.first_name || '', data.last_name || '', data.username || '', data.phone || '', data.order_id || '']);
+    } else if (data.type === 'set_pending') {
+      // Bot mijozdan telefon so'raganda, qaysi buyruq (oxirgi buyurtmami yoki
+      // hammasimi) kutilayotganini vaqtincha eslab qolish uchun (5 daqiqa).
+      CacheService.getScriptCache().put('pending_' + data.chat_id, String(data.intent || ''), 300);
+      return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+        .setMimeType(ContentService.MimeType.JSON);
     } else if (data.type === 'order') {
       // Mijoz saytda buyurtma bergan — keyinroq Telegram bot shu yozuvni
       // ID bo'yicha topib, mijozga shaxsiy tasdiqlash xabarini yuboradi
@@ -141,8 +149,13 @@ function writeRow(ss, sheetName, headers, row) {
 /**
  * GET so'rov: odatda brauzerda ochib tekshirish uchun ishlatiladi.
  * Lekin Telegram bot funksiyasi (netlify/functions/telegram-bot.js)
- * ham shu manzilga ?action=getOrder&id=<ID> ko'rinishida murojaat qilib,
- * mijoz "Start" bosgan buyurtma haqidagi ma'lumotni JSON ko'rinishida oladi.
+ * ham shu manzilga bir necha ?action=... turlari bilan murojaat qiladi:
+ *   - getOrder&id=<ID>              → bitta buyurtmani ID bo'yicha topadi
+ *   - getOrdersByPhone&phone=<raqam> → telefon bo'yicha barcha buyurtmalar
+ *   - getPhoneByChatId&chat_id=<ID>  → shu Telegram chat avval ulashgan
+ *     telefon raqamini topadi (qayta so'ramaslik uchun)
+ *   - getPending&chat_id=<ID>        → shu chat uchun "kutilayotgan"
+ *     buyruqni (oxirgi/hammasi) qaytaradi va (clear=1 bo'lsa) tozalaydi
  */
 function doGet(e) {
   var params = (e && e.parameter) || {};
@@ -151,6 +164,17 @@ function doGet(e) {
   }
   if (params.action === 'getOrdersByPhone' && params.phone) {
     return findOrdersByPhone(params.phone);
+  }
+  if (params.action === 'getPhoneByChatId' && params.chat_id) {
+    return findPhoneByChatId(params.chat_id);
+  }
+  if (params.action === 'getPending' && params.chat_id) {
+    var cache = CacheService.getScriptCache();
+    var key = 'pending_' + params.chat_id;
+    var intent = cache.get(key) || '';
+    if (params.clear === '1' && intent) cache.remove(key);
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, intent: intent }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
   return ContentService.createTextOutput('YasinDoors Sheets qabul qiluvchisi ishlayapti.');
 }
@@ -212,5 +236,33 @@ function findOrderById(id) {
   }
 
   return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Shu Telegram chat avval "Telegram foydalanuvchilari" varag'iga telefon
+// raqamini ulashgan bo'lsa (masalan kontakt tugmasi orqali), eng so'nggi
+// (oxirgi) qatordagi qiymatini topib qaytaradi — shunda bot har safar
+// qayta telefon so'ramaydi.
+function findPhoneByChatId(chatId) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Telegram foydalanuvchilari');
+  var phone = '';
+
+  if (sheet) {
+    var values = sheet.getDataRange().getValues();
+    var headers = values[0];
+    var chatCol = headers.indexOf('Chat ID');
+    var phoneCol = headers.indexOf('Telefon');
+    if (chatCol !== -1 && phoneCol !== -1) {
+      for (var i = values.length - 1; i >= 1; i--) {
+        if (String(values[i][chatCol]) === String(chatId) && values[i][phoneCol]) {
+          phone = String(values[i][phoneCol]);
+          break;
+        }
+      }
+    }
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ ok: true, phone: phone }))
     .setMimeType(ContentService.MimeType.JSON);
 }

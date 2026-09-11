@@ -6,9 +6,17 @@
  *   - netlify/functions/telegram-bot.js       → mijoz botga yozganda → mijozga javob va tugmalar (ikki tomonlama)
  *
  * Ishlash tartibi:
- *   1. Mijoz botga istalgan matn yozadi (yoki /start bosadi).
- *   2. Bot erkin matnni "tinglamaydi" — har doim bir xil menyuni tugmalar bilan qaytaradi.
- *   3. Mijoz tugmani bossa (callback_query), bot shu mavzu bo'yicha tayyor javobni yuboradi
+ *   1. Mijoz botga birinchi marta yozganda (yoki /start, /help), bot
+ *      buyruqlar ro'yxatini (yordam xabarini) va menyu tugmalarini qaytaradi.
+ *   2. /order — mijozning ENG SO'NGGI buyurtmasini ko'rsatadi.
+ *      /allorder — mijozning BARCHA buyurtmalarini ro'yxat qilib beradi.
+ *      Ikkalasi uchun ham, agar mijozning telefon raqami hali noma'lum
+ *      bo'lsa, bot "📞 Telefon raqamimni yuborish" tugmasi orqali so'raydi,
+ *      so'ng Google Sheets'dagi "Buyurtmalar" varag'idan shu raqamga
+ *      tegishli yozuvlarni qidirib topadi. Raqam bir marta ulashilgach,
+ *      keyingi safar qayta so'ralmaydi (Sheets'da eslab qolinadi).
+ *   3. Mijoz "💳 To'lov usullari" / "🕐 Ish vaqti" tugmalarini bossa
+ *      (callback_query), bot shu mavzu bo'yicha tayyor javobni yuboradi
  *      va "Menyuga qaytish" tugmasini qo'shadi.
  *
  * Kerakli ENV o'zgaruvchilar (Netlify → Site configuration → Environment variables):
@@ -49,7 +57,11 @@ async function callTelegram(method, payload) {
 
 var MAIN_MENU_TEXT =
   "🙋 Salom! Men <b>YasinDoors</b> botiman.\n\n" +
-  "Erkin matn yozish o'rniga, quyidagi tugmalardan birini tanlang — shunda tezroq va aniqroq javob olasiz:";
+  "Quyidagi buyruqlardan foydalanishingiz mumkin:\n" +
+  "📦 /order — eng so'nggi buyurtmangiz haqida ma'lumot\n" +
+  "🗂 /allorder — barcha buyurtmalaringiz ro'yxati\n" +
+  "❓ /help — shu yordam xabarini qayta ko'rish\n\n" +
+  "Yoki quyidagi tugmalardan birini tanlang:";
 
 var MAIN_MENU_KEYBOARD = {
   inline_keyboard: [
@@ -186,9 +198,57 @@ async function fetchOrdersByPhone(phone) {
   }
 }
 
-function buildOneOrderBlock(order, index) {
+// Shu chat avval telefon raqamini ulashgan bo'lsa (Code.gs "Telegram
+// foydalanuvchilari" varag'idan), uni topib qaytaradi — shunda /order
+// yoki /allorder buyrug'i berilganda har safar qayta so'ralmaydi.
+async function getKnownPhone(chatId) {
+  var url = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+  if (!url) return '';
+  try {
+    var sep = url.indexOf('?') === -1 ? '?' : '&';
+    var res = await fetch(url + sep + 'action=getPhoneByChatId&chat_id=' + encodeURIComponent(chatId));
+    var data = await res.json();
+    return (data && data.ok) ? (data.phone || '') : '';
+  } catch (err) {
+    console.error('Telefonni chat ID bo\'yicha olishda xatolik:', err);
+    return '';
+  }
+}
+
+// Bot mijozdan telefon so'raganda, qaysi buyruq ("oxirgisi" yoki "hammasi")
+// kutilayotganini vaqtincha (5 daqiqaga) Google Apps Script'ning
+// CacheService'ida eslab qoladi — Netlify function har safar "yangidan"
+// ishga tushgani uchun bu holatni o'zida saqlay olmaydi.
+async function setPendingIntent(chatId, intent) {
+  var url = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+  if (!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ type: 'set_pending', chat_id: chatId, intent: intent })
+    });
+  } catch (err) {
+    console.error('Pending holatni saqlashda xatolik:', err);
+  }
+}
+
+async function getPendingIntent(chatId) {
+  var url = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+  if (!url) return '';
+  try {
+    var sep = url.indexOf('?') === -1 ? '?' : '&';
+    var res = await fetch(url + sep + 'action=getPending&chat_id=' + encodeURIComponent(chatId) + '&clear=1');
+    var data = await res.json();
+    return (data && data.ok) ? (data.intent || '') : '';
+  } catch (err) {
+    console.error('Pending holatni olishda xatolik:', err);
+    return '';
+  }
+}
+
+function buildOrderDetailLines(order) {
   var lines = [
-    '📦 <b>Buyurtma ' + index + '</b>',
     '🚪 Model: ' + (order['Model'] || '—') + (order['Seriya'] ? ' (' + order['Seriya'] + ')' : '')
   ];
   if (order["O'lcham"]) lines.push("📏 O'lcham: " + order["O'lcham"]);
@@ -199,6 +259,10 @@ function buildOneOrderBlock(order, index) {
   return lines.join('\n');
 }
 
+function buildOneOrderBlock(order, index) {
+  return '📦 <b>Buyurtma ' + index + '</b>\n' + buildOrderDetailLines(order);
+}
+
 // "📞 Telefon raqamimni yuborish" — bitta bosishda ulashiladigan tugma
 // (mijoz erkin matn yozmaydi, faqat shu tugmani bosadi)
 var CONTACT_REQUEST_KEYBOARD = {
@@ -207,39 +271,69 @@ var CONTACT_REQUEST_KEYBOARD = {
   one_time_keyboard: true
 };
 
-async function handleMyOrdersStart(chatId) {
-  await callTelegram('sendMessage', {
-    chat_id: chatId,
-    text: "Buyurtmalaringizni ko'rsatish uchun telefon raqamingizni tasdiqlang — pastdagi tugmani bosing:",
-    reply_markup: CONTACT_REQUEST_KEYBOARD
-  });
+// /order yoki /allorder buyrug'i berilganda ishga tushadi.
+// Agar bu chat uchun telefon allaqachon ma'lum bo'lsa — darhol natijani
+// ko'rsatadi; aks holda telefon so'raydi (va nima kutilayotganini eslab qoladi).
+async function handleOrderCommand(chatId, msg, mode) {
+  await logTelegramUser(msg);
+  var phone = await getKnownPhone(chatId);
+
+  if (!phone) {
+    await setPendingIntent(chatId, mode);
+    await callTelegram('sendMessage', {
+      chat_id: chatId,
+      text: "Buyurtma(lar)ingizni topish uchun telefon raqamingizni tasdiqlang — pastdagi tugmani bosing:",
+      reply_markup: CONTACT_REQUEST_KEYBOARD
+    });
+    return;
+  }
+
+  await sendOrdersForPhone(chatId, phone, mode, false);
 }
 
-async function handleContactShared(chatId, contact, msg) {
-  await logTelegramUser(msg, { phone: contact.phone_number });
-  var orders = await fetchOrdersByPhone(contact.phone_number);
+// Telefon bo'yicha topilgan buyurtma(lar)ni chiroyli qilib yuboradi.
+//   mode: 'last' — faqat eng so'nggisi (+ "hammasini ko'rish" tugmasi)
+//         'all'  — barcha buyurtmalar ro'yxati
+//   justGotContact — true bo'lsa, avval reply-klaviaturani olib tashlaydigan
+//                     qisqa xabar yuboradi (kontakt hozirgina ulashilgan bo'lsa)
+async function sendOrdersForPhone(chatId, phone, mode, justGotContact) {
+  if (justGotContact) {
+    await callTelegram('sendMessage', {
+      chat_id: chatId,
+      text: '✅ Rahmat! Qidiryapman...',
+      reply_markup: { remove_keyboard: true }
+    });
+  }
 
-  // Reply keyboard'ni olib tashlaymiz
+  var orders = await fetchOrdersByPhone(phone);
+
   if (!orders.length) {
     await callTelegram('sendMessage', {
       chat_id: chatId,
       text: "Sizning raqamingiz bo'yicha hozircha buyurtma topilmadi.",
-      reply_markup: { remove_keyboard: true }
+      reply_markup: BACK_KEYBOARD
     });
-    await sendMenu(chatId);
     return;
   }
 
-  var text = '🗂 <b>Sizning buyurtmalaringiz</b> (' + orders.length + " ta):\n\n" +
-    orders.map(function (o, i) { return buildOneOrderBlock(o, i + 1); }).join('\n\n') +
-    "\n\nTez orada mutaxassisimiz zalog to'lovi bo'yicha siz bilan bog'lanadi.";
+  if (mode === 'last') {
+    var lastText = "📦 <b>Eng so'nggi buyurtmangiz</b>\n\n" + buildOrderDetailLines(orders[0]) +
+      (orders.length > 1 ? ("\n\n<i>Jami " + orders.length + " ta buyurtmangiz bor.</i>") : '');
+    var keyboard = orders.length > 1
+      ? { inline_keyboard: [[{ text: "🗂 Barcha buyurtmalarni ko'rish", callback_data: 'allorders' }], [{ text: "🔙 Menyuga qaytish", callback_data: 'menu' }]] }
+      : BACK_KEYBOARD;
+    await callTelegram('sendMessage', { chat_id: chatId, text: lastText, parse_mode: 'HTML', reply_markup: keyboard });
+  } else {
+    var allText = '🗂 <b>Sizning buyurtmalaringiz</b> (' + orders.length + " ta):\n\n" +
+      orders.map(function (o, i) { return buildOneOrderBlock(o, i + 1); }).join('\n\n');
+    await callTelegram('sendMessage', { chat_id: chatId, text: allText, parse_mode: 'HTML', reply_markup: BACK_KEYBOARD });
+  }
+}
 
-  await callTelegram('sendMessage', {
-    chat_id: chatId,
-    text: text,
-    parse_mode: 'HTML',
-    reply_markup: { remove_keyboard: true }
-  });
+async function handleContactShared(chatId, contact, msg) {
+  await logTelegramUser(msg, { phone: contact.phone_number });
+  var intent = await getPendingIntent(chatId);
+  await sendOrdersForPhone(chatId, contact.phone_number, intent === 'last' ? 'last' : 'all', true);
 }
 
 function sendMenu(chatId) {
@@ -304,31 +398,50 @@ exports.handler = async function (event) {
         await sendAnswer(chatId, PAY_INFO_TEXT);
       } else if (data === 'hours_info') {
         await sendAnswer(chatId, HOURS_INFO_TEXT);
+      } else if (data === 'allorders') {
+        var phoneForAll = await getKnownPhone(chatId);
+        if (phoneForAll) {
+          await sendOrdersForPhone(chatId, phoneForAll, 'all', false);
+        } else {
+          await handleOrderCommand(chatId, { chat: cq.message.chat, from: cq.from }, 'all');
+        }
       } else {
         await sendMenu(chatId);
       }
     } else if (update.message) {
       var msgChatId = update.message.chat.id;
       var text = update.message.text || '';
+      var cmd = text.trim().split(/\s+/)[0].toLowerCase();
 
       if (update.message.contact) {
         // Mijoz "📞 Telefon raqamimni yuborish" tugmasini bosdi
         await handleContactShared(msgChatId, update.message.contact, update.message);
-      } else if (text.indexOf('/start') === 0) {
+      } else if (cmd === '/start') {
         var payload = text.slice(6).trim(); // "/start" dan keyingi qism (bo'sh bo'lishi ham mumkin)
         if (payload === 'my_orders') {
           // Bosh sahifa/katalogdagi umumiy "Buyurtmalarimni ko'rish" havolasi orqali kelgan
-          await logTelegramUser(update.message);
-          await handleMyOrdersStart(msgChatId);
+          await handleOrderCommand(msgChatId, update.message, 'all');
         } else if (payload) {
           // Mijoz saytdagi "Telegramda kuzatish" havolasi orqali kelgan —
           // buyurtmasi haqida shaxsiy tasdiqlash xabari yuboriladi
           await handleOrderStart(msgChatId, payload, update.message);
         } else {
+          // Birinchi marta yozgan (yoki oddiy /start) — yordam menyusi
           await logTelegramUser(update.message);
           await sendMenu(msgChatId);
         }
+      } else if (cmd === '/order') {
+        // Eng so'nggi buyurtma
+        await handleOrderCommand(msgChatId, update.message, 'last');
+      } else if (cmd === '/allorder' || cmd === '/allorders') {
+        // Barcha buyurtmalar
+        await handleOrderCommand(msgChatId, update.message, 'all');
+      } else if (cmd === '/help') {
+        await logTelegramUser(update.message);
+        await sendMenu(msgChatId);
       } else {
+        // Har qanday boshqa (erkin) matn — birinchi marta yozgan mijoz uchun
+        // ham, keyingilar uchun ham xuddi shu yordam menyusi ko'rsatiladi
         await logTelegramUser(update.message);
         await sendMenu(msgChatId);
       }
