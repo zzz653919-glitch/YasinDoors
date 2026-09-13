@@ -6,33 +6,28 @@
  *   1) Saytdan keladigan ma'lumotlarni Google Sheets'ga yozadi
  *      (register, login, order, telegram_user) — avvalgidek.
  *
- *   2) Telegram botga mijoz yozganda (webhook orqali) TO'G'RIDAN-TO'G'RI
- *      shu yerning o'zida javob qaytaradi — Netlify yoki boshqa hech
- *      qanday alohida server/hosting KERAK EMAS. Google Apps Script'ning
- *      o'zi bot uchun ham "server" vazifasini bajaradi.
- *
- * Nega bu ishlaydi: Telegram "webhook" - bu shunchaki, mijoz botga
- * yozganda Telegram shu ma'lumotni yuboradigan URL. Avval bu URL
- * Netlify function edi, endi xuddi shu Apps Script Web App URL
- * (sheets-config.js'dagi bilan BIR XIL) bo'ladi.
+ *   2) Telegram botga mijoz yozganda (Cloudflare Worker orqali kelgan
+ *      webhook orqali) javob qaytaradi.
  *
  * ====================== O'RNATISH ======================
  * 1. Pastdagi TELEGRAM_BOT_TOKEN qiymatini tekshiring (allaqachon to'ldirilgan).
  * 2. Bu faylni to'liq joylashtirgach, Deploy → Manage deployments →
  *    tahrirlash (qalam) → Version: New version → Deploy qiling.
- * 3. Web App URL'ingizni (sheets-config.js'dagi bilan bir xil) oling.
- * 4. Brauzerda quyidagi havolani oching (o'z TOKEN va URL'ingiz bilan):
- *    https://api.telegram.org/bot<TOKEN>/setWebhook?url=<WEB_APP_URL>
- *    Javobda "ok":true chiqsa — tayyor, boshqa hech narsa kerak emas.
+ * 3. Web App URL'ingizni (sheets-config.js'dagi bilan bir xil) oling —
+ *    shu manzil cloudflare-worker.js dagi APPS_SCRIPT_URL bilan bir xil
+ *    bo'lishi kerak.
+ * 4. Telegram webhookni Apps Script'ga emas, Cloudflare Worker manziliga
+ *    o'rnating:
+ *    https://api.telegram.org/bot<TOKEN>/setWebhook?url=<WORKER_URL>
+ *    Javobda "ok":true chiqsa — tayyor.
+ * DIQQAT: bu versiyada polling/trigger ISHLATILMAYDI — webhook va
+ * polling bir vaqtda ishlay olmaydi.
  * =========================================================
  */
 
 // ================== SOZLAMALAR ==================
 
-// @BotFather bergan bot tokeningiz (telegram-config.js'dagi bilan bir xil)
 var TELEGRAM_BOT_TOKEN = '8919097362:AAFvgfRWGg4ZIIJ9Pi0bsxxPVCqSIqI_eLw';
-
-// Botdagi "🌐 Saytga o'tish" tugmasi shu manzilga olib boradi — o'zingiznikiga moslang
 var WEBSITE_URL = 'https://zzz653919-glitch.github.io';
 
 
@@ -61,14 +56,14 @@ function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
 
-    // ---- Telegram webhook'dan kelgan yangilanish (har doim "update_id" bo'ladi) ----
+    // ---- Telegram'dan (Cloudflare Worker "ko'prigi" orqali) kelgan yangilanish ----
     if (data.update_id !== undefined) {
       handleTelegramUpdate(data);
       return ContentService.createTextOutput(JSON.stringify({ ok: true }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // ---- Saytdan kelgan oddiy ma'lumotlar (avvalgidek) ----
+    // ---- Saytdan kelgan oddiy ma'lumotlar ----
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var now = new Date();
 
@@ -96,6 +91,22 @@ function doPost(e) {
     return ContentService.createTextOutput(JSON.stringify({ ok: false, error: String(err) }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+// GET so'rov: brauzerda ochib tekshirish uchun
+function doGet(e) {
+  return ContentService.createTextOutput('YasinDoors Sheets/Bot qabul qiluvchisi ishlayapti.');
+}
+
+function onlyDigits(s) {
+  return String(s || '').replace(/\D/g, '');
+}
+
+function looksLikePhone(text) {
+  text = String(text || '').trim();
+  if (!text || text.indexOf('/') === 0) return false;
+  var digits = onlyDigits(text);
+  return digits.length >= 7 && digits.length <= 13;
 }
 
 /**
@@ -148,24 +159,11 @@ function writeRow(ss, sheetName, headers, row) {
 
   sheet.getRange(lastRow, 1, 1, headers.length)
     .setBackground(lastRow % 2 === 0 ? ROW_BG_EVEN : ROW_BG_ODD)
-    .setVerticalAlignment('middle');
-
-  sheet.getRange(1, 1, lastRow, headers.length)
+    .setVerticalAlignment('middle')
     .setBorder(true, true, true, true, true, true, BORDER_COLOR, SpreadsheetApp.BorderStyle.SOLID);
 }
 
-// GET so'rov: brauzerda ochib tekshirish uchun (ixtiyoriy, endi bot uchun shart emas)
-function doGet(e) {
-  return ContentService.createTextOutput('YasinDoors Sheets/Bot qabul qiluvchisi ishlayapti.');
-}
-
-function onlyDigits(s) {
-  return String(s || '').replace(/\D/g, '');
-}
-
-
 // ================== SHEETS: BOT UCHUN TO'G'RIDAN-TO'G'RI FUNKSIYALAR ==================
-// (HTTP so'rovsiz — chunki bot endi shu skriptning ICHIDA ishlaydi)
 
 function logTelegramUserDirect(msg, extra) {
   try {
@@ -244,8 +242,6 @@ function findPhoneByChatIdDirect(chatId) {
   return '';
 }
 
-// Bot mijozdan telefon so'raganda, qaysi buyruq ("oxirgisi" yoki "hammasi")
-// kutilayotganini vaqtincha (5 daqiqaga) eslab qolish uchun
 function setPendingIntentDirect(chatId, intent) {
   CacheService.getScriptCache().put('pending_' + chatId, String(intent || ''), 300);
 }
@@ -257,7 +253,6 @@ function getPendingIntentDirect(chatId, clear) {
   if (clear && intent) cache.remove(key);
   return intent;
 }
-
 
 // ================== TELEGRAM BOT: XABAR YUBORISH ==================
 
@@ -316,7 +311,6 @@ var BACK_KEYBOARD = {
   ]
 };
 
-// TODO: quyidagi ikkita matnni haqiqiy ma'lumot bilan to'ldiring/tekshirib chiqing.
 var PAY_INFO_TEXT =
   "💳 <b>To'lov usullari</b>\n\n" +
   "Buyurtma tasdiqlash uchun umumiy summaning <b>20%</b> miqdorida zalog (oldindan to'lov) olinadi.\n" +
@@ -326,7 +320,6 @@ var PAY_INFO_TEXT =
   "2️⃣ Yoki ofisimizga kelib naqd to'lashingiz mumkin\n\n" +
   "Aniq to'lov rekvizitlari uchun operator bilan bog'laning: <a href=\"tel:+998933002020\">+998 93 300 20 20</a>";
 
-// TODO: ish vaqtini (masalan Dush–Shan, 09:00–19:00) va aniq manzil matnini kiriting.
 var HOURS_INFO_TEXT =
   "🕐 <b>Ish vaqti</b>: [TO'LDIRING — masalan: Dushanba–Shanba, 09:00–19:00]\n\n" +
   "📍 <b>Manzil</b>: <a href=\"https://maps.app.goo.gl/oFEyE3jcY1ZPsXMJ9\">Xaritada ko'rish</a>\n\n" +
@@ -394,8 +387,6 @@ function buildOrderConfirmText(order) {
   return lines.join('\n');
 }
 
-// Mijoz "https://t.me/BOT?start=o_<ID>" havolasini bosib botga birinchi
-// marta yozganda ishga tushadi.
 function handleOrderStart(chatId, payload, msg) {
   var orderId = payload.indexOf('o_') === 0 ? payload.slice(2) : payload;
   logTelegramUserDirect(msg, { order_id: orderId });
@@ -419,7 +410,6 @@ function handleOrderStart(chatId, payload, msg) {
   });
 }
 
-// Telefon bo'yicha topilgan buyurtma(lar)ni chiroyli qilib yuboradi.
 function sendOrdersForPhone(chatId, phone, mode, justGotContact) {
   if (justGotContact) {
     callTelegram('sendMessage', {
@@ -454,7 +444,6 @@ function sendOrdersForPhone(chatId, phone, mode, justGotContact) {
   }
 }
 
-// /order yoki /allorder buyrug'i berilganda ishga tushadi.
 function handleOrderCommand(chatId, msg, mode) {
   logTelegramUserDirect(msg);
   var phone = findPhoneByChatIdDirect(chatId);
@@ -473,9 +462,9 @@ function handleOrderCommand(chatId, msg, mode) {
 }
 
 function handleContactShared(chatId, contact, msg) {
-  logTelegramUserDirect(msg, { phone: contact.phone_number });
   var intent = getPendingIntentDirect(chatId, true);
   sendOrdersForPhone(chatId, contact.phone_number, intent === 'last' ? 'last' : 'all', true);
+  logTelegramUserDirect(msg, { phone: contact.phone_number });
 }
 
 // ================== TELEGRAM BOT: KELGAN YANGILANISHNI QAYTA ISHLASH ==================
@@ -510,6 +499,10 @@ function handleTelegramUpdate(update) {
 
       if (update.message.contact) {
         handleContactShared(msgChatId, update.message.contact, update.message);
+      } else if (looksLikePhone(text) && getPendingIntentDirect(msgChatId, false)) {
+        var typedIntent = getPendingIntentDirect(msgChatId, true);
+        sendOrdersForPhone(msgChatId, text.trim(), typedIntent === 'last' ? 'last' : 'all', true);
+        logTelegramUserDirect(update.message, { phone: text.trim() });
       } else if (cmd === '/start') {
         var payload = text.slice(6).trim();
         if (payload === 'my_orders') {

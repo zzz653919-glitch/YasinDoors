@@ -6,4 +6,4 @@
  * manzilini shu yerga qo'ying.
  * -----------------------------------------------------------------
  */
-window.SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbz757ctL9yWpU05XSg2RVX1O1Bd1VisrXGHk9zth3yQd9yCND-Vh0D6Z1bFw_EZC9hS/exec';
+window.SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbx83wGVorsrT--XDV709gs_2OxKpFnv1YCBd0sh55Gd5X2ceC7BpOEcD6qLhgUO0GmQ/exec';
