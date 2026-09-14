@@ -1,29 +1,35 @@
-// Bu fayl brauzerda (mijozning kompyuterida/telefonida) ishlaydi.
-// Vazifasi: buyurtma formasidan yig'ilgan ma'lumotni (orderData) qabul qilib,
-// serverdagi Netlify Function'ga (netlify/functions/send-order.js) yuborish —
-// u esa Telegram botiga xabar shaklida yetkazadi.
-//
-// MUHIM: Bot tokeni bu faylda YO'Q — u faqat serverda (Netlify Environment
-// Variables ichida) saqlanadi, shuning uchun token hech qachon brauzerda
-// ko'rinmaydi va xavfsiz qoladi.
+// ============================================================================
+// YASINDOORS — telegram-order.js
+// Buyurtmani endi Google Apps Script/Sheets O'RNIGA to'g'ridan-to'g'ri
+// o'zingizning app.py serveringizga yuboradi (bot-config.js dagi API_BASE_URL).
+// buyurtma.html / buyurtma2.html shu faylni chaqiradi: window.sendTelegramOrder(orderData)
+// ============================================================================
 
 window.sendTelegramOrder = function (orderData) {
-  return fetch('/.netlify/functions/send-order', {
+  var base = window.API_BASE_URL;
+  if (!base || String(base).indexOf('BU_YERGA') !== -1) {
+    console.error('bot-config.js da API_BASE_URL sozlanmagan.');
+    return Promise.resolve();
+  }
+
+  return fetch(base.replace(/\/$/, '') + '/api/order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(orderData)
+    body: JSON.stringify(Object.assign({ page: window.location.pathname }, orderData))
   })
-    .then(function (res) {
-      return res.json().catch(function () { return {}; }).then(function (result) {
-        if (!res.ok || !result || !result.success) {
-          throw new Error((result && result.error) || ('HTTP ' + res.status));
-        }
-        return result;
-      });
-    })
+    .then(function (res) { return res.json(); })
     .then(function (result) {
-      // Mijoz uchun "Telegramda kuzatish" tugmasi shu havolaga olib boradi
-      window.lastOrderTelegramLink = 'https://t.me/+998933002020';
+      // Muvaffaqiyat sahifasidagi "Buyurtmani Telegramda kuzatish" tugmasi
+      // shu havoladan foydalanadi (buyurtma.html ichida window.lastOrderTelegramLink)
+      if (result && result.telegram_link) {
+        window.lastOrderTelegramLink = result.telegram_link;
+      }
       return result;
+    })
+    .catch(function (err) {
+      console.error('Buyurtmani serverga yuborishda xatolik:', err);
+      // Xatolik bo'lsa ham mijozni kutdirib qo'ymaymiz — chaqiruvchi kod
+      // (buyurtma.html) baribir muvaffaqiyat sahifasini ko'rsatadi.
+      throw err;
     });
 };

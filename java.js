@@ -152,17 +152,16 @@ document.addEventListener('DOMContentLoaded', function () {
   // forma ism/telefon/kod ma'lumotini Google Sheets'ga yuboradi (lid sifatida)
   // va modal oynani yopadi.
   function sendToSheets(payload) {
-    var url = window.SHEETS_WEBHOOK_URL;
-    if (!url || url.indexOf('BU_YERGA') !== -1) {
-      console.error('Google Sheets sozlanmagan: sheets-config.js faylida SHEETS_WEBHOOK_URL kiriting.');
+    var base = window.API_BASE_URL;
+    if (!base || String(base).indexOf('BU_YERGA') !== -1) {
+      console.error('Server sozlanmagan: bot-config.js faylida API_BASE_URL kiriting.');
       return;
     }
-    fetch(url, {
+    fetch(base.replace(/\/$/, '') + '/api/lead', {
       method: 'POST',
-      mode: 'no-cors', // Google Apps Script javobini o'qimaymiz, faqat yuboramiz
-      headers: { 'Content-Type': 'text/plain' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
-    }).catch(function (err) { console.error('Sheets xatoligi:', err); });
+    }).catch(function (err) { console.error('Serverga yuborishda xatolik:', err); });
   }
 
   var loginFormEl = document.getElementById('loginForm');
