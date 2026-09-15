@@ -1,28 +1,29 @@
 /**
- * YASINDOORS — Google Apps Script: faqat Sheets ma'lumotlar bazasi
+ * YASINDOORS — Google Apps Script: Sheets + to'liq Telegram bot (Python SHART EMAS)
  * -----------------------------------------------------------------
- * Bu fayl endi FAQAT Google Sheets bilan ishlaydi:
+ * Bu yagona fayl endi HAMMASINI o'z ichiga oladi:
  *
  *   1) Saytdan keladigan ma'lumotlarni Sheets'ga yozadi
  *      (register, login, order, telegram_user) — doPost orqali.
  *
- *   2) Python botimiz (bot.py) buyurtma va telefon ma'lumotlarini
- *      o'qishi uchun doGet orqali so'rov (query) imkoniyatini beradi.
- *
- * DIQQAT: bu versiyada Telegram WEBHOOK ISHLATILMAYDI. Interaktiv bot
- * (/order, /allorder va h.k.) endi to'liq Python tomonida (bot.py),
- * long-polling orqali ishlaydi. Shuning uchun bu Web App manziliga
- * setWebhook QILMANG — aks holda Python botning polling'i ishlamay qoladi
- * (Telegram bir vaqtning o'zida faqat bittasiga — webhook YOKI polling'ga — yangilanish yuboradi).
+ *   2) Telegram botning to'liq mantig'i (/start, /order, /allorder,
+ *      menyu, kontakt orqali qidiruv) — Telegram WEBHOOK orqali,
+ *      shu Web App'ning o'zida ishlaydi. Alohida Python skript, VPS
+ *      yoki doim ishlab turadigan kompyuter SHART EMAS.
  *
  * ====================== O'RNATISH ======================
- * 1. Pastdagi TELEGRAM_BOT_TOKEN qiymatini tekshiring (allaqachon to'ldirilgan,
- *    lekin bu faylda endi shart emas — faqat eski qatorlar bilan mosligi uchun qoldirildi).
+ * 1. Pastdagi TELEGRAM_BOT_TOKEN va ADMIN_CHAT_ID qiymatlarini tekshiring
+ *    (allaqachon to'ldirilgan).
  * 2. Bu faylni to'liq joylashtirgach, Deploy → Manage deployments →
  *    tahrirlash (qalam) → Version: New version → Deploy qiling.
  * 3. Web App URL'ni (https://script.google.com/macros/s/.../exec) nusxalab,
- *    Python tarafdagi config.py'dagi SHEETS_WEBHOOK_URL'ga va sayt tarafdagi
- *    bot-config.js'dagi SHEETS_WEBHOOK_URL'ga qo'ying.
+ *    sayt tarafdagi bot-config.js'dagi SHEETS_WEBHOOK_URL'ga qo'ying.
+ * 4. Telegram webhookni aynan shu Web App URL'ga o'rnating — brauzerda
+ *    quyidagi havolani oching (o'z TOKEN va URL'ingiz bilan):
+ *    https://api.telegram.org/bot<TOKEN>/setWebhook?url=<WEB_APP_URL>
+ *    Javobda "ok":true chiqsa — bot tayyor, hech qanday Python kerak emas.
+ * DIQQAT: agar avval bot.py (long-polling) ishlatgan bo'lsangiz, uni
+ * butunlay to'xtatib qo'ying — webhook va polling bir vaqtda ishlay olmaydi.
  * =========================================================
  */
 
@@ -373,7 +374,7 @@ var PAY_INFO_TEXT =
   "Aniq to'lov rekvizitlari uchun operator bilan bog'laning: <a href=\"tel:+998933002020\">+998 93 300 20 20</a>";
 
 var HOURS_INFO_TEXT =
-  "🕐 <b>Ish vaqti</b>: [TO'LDIRING — masalan: Dushanba–Shanba, 09:00–19:00]\n\n" +
+  "🕐 <b>Ish vaqti</b>: Dushanba–Shanba, 09:00–19:00\n\n" +
   "📍 <b>Manzil</b>: <a href=\"https://maps.app.goo.gl/oFEyE3jcY1ZPsXMJ9\">Xaritada ko'rish</a>\n\n" +
   "📞 Telefon: <a href=\"tel:+998933002020\">+998 93 300 20 20</a>";
 
