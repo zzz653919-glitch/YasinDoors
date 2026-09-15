@@ -29,6 +29,7 @@
 // ================== SOZLAMALAR ==================
 
 var TELEGRAM_BOT_TOKEN = '8919097362:AAFvgfRWGg4ZIIJ9Pi0bsxxPVCqSIqI_eLw';
+var ADMIN_CHAT_ID = '170310198';
 var WEBSITE_URL = 'https://zzz653919-glitch.github.io';
 
 
@@ -83,6 +84,7 @@ function doPost(e) {
          data.series || '', data.size || '', data.color || '', data.quantity || '',
          data.total || '', data.deposit || '', data.address || '', data.map_link || '',
          data.page || '']);
+      notifyAdminNewOrder(data);
     }
 
     return ContentService.createTextOutput(JSON.stringify({ ok: true }))
@@ -296,6 +298,37 @@ function callTelegram(method, payload) {
 function formatSom(num) {
   var n = Math.round(Number(num) || 0);
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + " so'm";
+}
+
+// Yangi buyurtma Sheets'ga yozilgan zahoti admin (do'kon egasi)ga Telegram xabar yuboradi
+function notifyAdminNewOrder(data) {
+  if (!ADMIN_CHAT_ID) return;
+  try {
+    var lines = [
+      "🛒 <b>Yangi buyurtma — YasinDoors</b>", "",
+      "👤 Mijoz: " + (data.name || '—'),
+      "📞 Tel: " + (data.phone || '—'),
+      "🚪 Model: " + (data.model || '—') + (data.series ? ' (' + data.series + ')' : '')
+    ];
+    if (data.size) lines.push("📏 O'lcham: " + data.size);
+    lines.push("🎨 Rang: " + (data.color || '—'));
+    lines.push("🔢 Miqdor: " + (data.quantity || '—') + ' dona');
+    lines.push('💰 Umumiy: ' + formatSom(data.total));
+    lines.push("💵 Zalog (20%): " + formatSom(data.deposit));
+    if (data.address) lines.push('📍 Manzil: ' + data.address);
+
+    var payload = {
+      chat_id: ADMIN_CHAT_ID,
+      text: lines.join('\n'),
+      parse_mode: 'HTML'
+    };
+    if (data.map_link) {
+      payload.reply_markup = { inline_keyboard: [[{ text: "🗺 Xaritada ko'rish", url: data.map_link }]] };
+    }
+    callTelegram('sendMessage', payload);
+  } catch (err) {
+    console.error('notifyAdminNewOrder xatoligi:', err);
+  }
 }
 
 // ---------- Menyu va javob matnlari ----------

@@ -99,11 +99,9 @@ avtomatik paydo bo'ladi: **Buyurtmalar**, **Ro'yxatdan o'tganlar**,
 **Kirish urinishlari**, **Telegram foydalanuvchilari**. Excel qilib olish
 uchun: **Fayl → Yuklab olish → Microsoft Excel (.xlsx)**.
 
-## Eslatma: admin'ga yangi buyurtma xabari
+## Admin'ga yangi buyurtma xabari
 
-Hozirgi versiyada yangi buyurtma tushganda administratorga avtomatik
-Telegram xabari **yuborilmaydi** — buyurtmalar faqat Sheets'ga yoziladi,
-mijoz esa botga o'zi "Start" bosib buyurtmasini ko'rishi mumkin (saytdagi
-"Buyurtmani Telegramda kuzatish" tugmasi orqali). Agar xohlasangiz, har
-safar yangi buyurtma tushganda sizga (ADMIN_CHAT_ID'ga) ham avtomatik
-xabar boradigan qilib qo'shib beray — aytsangiz bo'ldi.
+Yangi buyurtma Sheets'ga yozilgan zahoti, `Code.gs` o'zi (Google server
+tomonida, `notifyAdminNewOrder()` orqali) sizga — `ADMIN_CHAT_ID`ga —
+avtomatik Telegram xabar yuboradi. Bot tokeni brauzerda ko'rinmaydi,
+qo'shimcha sozlash shart emas.
