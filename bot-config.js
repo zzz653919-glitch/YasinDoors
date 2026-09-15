@@ -7,7 +7,7 @@
 // ============================================================================
 
 // Code.gs'ni Deploy → New deployment → Web app qilganingizda olingan manzil
-window.SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyDMYNQ840x0WnaZhyCtkj4tEiFJTtXfQq2YQUXNRJJNgmC5ebKIZa-Td-AjA_XRvgmXQ/exec';
+window.SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxg00Uxi0S_oTciYx7W76ernK3XVacG0iaoTGVcSqs2eRG04msV_9wUl-iVoQbI5TQ6wQ/exec';
 
 // Botingizning @username'i (@ belgisisiz) — "Buyurtmani Telegramda
 // kuzatish" havolalari shu orqali quriladi.
