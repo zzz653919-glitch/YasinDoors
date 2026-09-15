@@ -1,13 +1,14 @@
 // ============================================================================
 // YASINDOORS — bot-config.js
 // telegram-config.js va sheets-config.js O'RNIGA — endi bittasi yetarli.
-// Bu yerdagi manzil sizning o'z serveringiz (app.py ishlayotgan server).
+// Bu yerdagi manzil — Code.gs'ni Google Apps Script'da "Web App" qilib deploy
+// qilganingizda olingan havola (https://script.google.com/macros/s/.../exec).
+// O'z serveringiz/VPS SHART EMAS — bu havola Google'ning o'zida ishlaydi.
 // ============================================================================
 
-// Sizning app.py serveringiz manzili (domen yoki IP:port).
-// Masalan: "https://api.yasindoors.uz" yoki "http://12.34.56.78:5000"
-window.API_BASE_URL = 'BU_YERGA_SERVER_MANZILINI_QOYING';
+// Code.gs'ni Deploy → New deployment → Web app qilganingizda olingan manzil
+window.SHEETS_WEBHOOK_URL = 'BU_YERGA_APPS_SCRIPT_WEB_APP_URL_QOYING';
 
 // Botingizning @username'i (@ belgisisiz) — "Buyurtmani Telegramda
 // kuzatish" havolalari shu orqali quriladi.
-window.TELEGRAM_BOT_USERNAME = 'BU_YERGA_BOT_USERNAME_QOYING';
+window.TELEGRAM_BOT_USERNAME = 'YasinDoors_Jizzax_bot';

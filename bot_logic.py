@@ -1,15 +1,15 @@
 """
-Telegram bot mantig'i — Code.gs faylidagi handleTelegramUpdate() va
-yordamchi funksiyalarning to'g'ridan-to'g'ri Python ko'chirmasi.
-Long polling orqali ishlaydi — webhook, Cloudflare Worker yoki
-Google Apps Script shart emas.
+Telegram bot mantig'i — endi ma'lumotlarni Google Sheets'dan (Code.gs Web App
+orqali) o'qiydi. Mahalliy baza (SQLite) shart emas. Long polling orqali
+ishlaydi — webhook, Cloudflare Worker yoki Netlify Function shart emas.
 """
 
 import logging
+import time
+
 import requests
 
 import config
-import db
 
 logger = logging.getLogger("bot_logic")
 
@@ -98,33 +98,107 @@ def format_som(n) -> str:
     return f"{s} so'm"
 
 
+def only_digits(s) -> str:
+    return "".join(ch for ch in str(s or "") if ch.isdigit())
+
+
 # ---------------------------------------------------------------------------
-# Buyurtma matnlarini yig'ish
+# Google Sheets (Code.gs) bilan ishlash — SQLite o'rniga
+# ---------------------------------------------------------------------------
+
+def sheets_get(action: str, **params) -> dict | list | None:
+    if not config.SHEETS_WEBHOOK_URL or "BU_YERGA" in config.SHEETS_WEBHOOK_URL:
+        logger.warning("SHEETS_WEBHOOK_URL sozlanmagan — Sheets'ga so'rov yuborilmadi.")
+        return None
+    try:
+        params["action"] = action
+        res = requests.get(config.SHEETS_WEBHOOK_URL, params=params, timeout=20)
+        return res.json()
+    except Exception:
+        logger.exception("Sheets'dan ma'lumot olishda xatolik")
+        return None
+
+
+def sheets_post(payload: dict):
+    if not config.SHEETS_WEBHOOK_URL or "BU_YERGA" in config.SHEETS_WEBHOOK_URL:
+        return
+    try:
+        requests.post(config.SHEETS_WEBHOOK_URL, json=payload, timeout=20)
+    except Exception:
+        logger.exception("Sheets'ga yozishda xatolik")
+
+
+def get_order(order_id: str) -> dict | None:
+    result = sheets_get("order", id=order_id)
+    if not result:
+        return None
+    return result  # Code.gs ustunlari (Uzbek kalitlar) bilan qaytadi
+
+
+def get_orders_by_phone(phone: str) -> list:
+    result = sheets_get("orders", phone=phone)
+    return result or []
+
+
+def find_phone_by_chat_id(chat_id) -> str:
+    result = sheets_get("phone", chat_id=chat_id)
+    return (result or {}).get("phone", "") if result else ""
+
+
+def log_telegram_user(chat_id, first_name="", last_name="", username="", phone="", order_id=""):
+    sheets_post({
+        "type": "telegram_user",
+        "chat_id": chat_id,
+        "first_name": first_name,
+        "last_name": last_name,
+        "username": username,
+        "phone": phone,
+        "order_id": order_id,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Pending intent (mijozdan telefon kutilyaptimi) — botning o'z xotirasida,
+# 5 daqiqa amal qiladi (Google Sheets'ga yozish shart emas, chunki bu faqat
+# shu bot jarayoni uchun vaqtinchalik holat)
+# ---------------------------------------------------------------------------
+
+_pending: dict[str, tuple[str, float]] = {}
+PENDING_TTL = 300  # sekund
+
+
+def set_pending_intent(chat_id, intent: str):
+    _pending[str(chat_id)] = (intent, time.time())
+
+
+def get_pending_intent(chat_id, clear: bool = False) -> str:
+    key = str(chat_id)
+    item = _pending.get(key)
+    if not item:
+        return ""
+    intent, ts = item
+    if time.time() - ts > PENDING_TTL:
+        _pending.pop(key, None)
+        return ""
+    if clear:
+        _pending.pop(key, None)
+    return intent
+
+
+# ---------------------------------------------------------------------------
+# Buyurtma matnlarini yig'ish (Code.gs'dagi ORDER_HEADERS — Uzbek kalitlar)
 # ---------------------------------------------------------------------------
 
 def build_order_detail_lines(order: dict) -> str:
-    lines = [f"🚪 Model: {order.get('model') or '—'}" + (f" ({order['series']})" if order.get("series") else "")]
-    if order.get("size"):
-        lines.append(f"📏 O'lcham: {order['size']}")
-    lines.append(f"🎨 Rang: {order.get('color_name') or '—'}")
-    lines.append(f"🔢 Miqdor: {order.get('quantity') or '—'} dona")
-    lines.append(f"💰 Umumiy: {format_som(order.get('total_price'))}")
-    lines.append(f"💵 Zalog (20%): {format_som(order.get('deposit'))}")
+    size = order.get("O'lcham")
+    lines = [f"🚪 Model: {order.get('Model') or '—'}" + (f" ({order['Seriya']})" if order.get("Seriya") else "")]
+    if size:
+        lines.append(f"📏 O'lcham: {size}")
+    lines.append(f"🎨 Rang: {order.get('Rang') or '—'}")
+    lines.append(f"🔢 Miqdor: {order.get('Miqdor') or '—'} dona")
+    lines.append(f"💰 Umumiy: {format_som(order.get('Umumiy narx'))}")
+    lines.append(f"💵 Zalog (20%): {format_som(order.get('Zalog'))}")
     return "\n".join(lines)
-
-
-def build_address(order: dict) -> str:
-    parts = [p for p in [
-        (f"{order['house']}-uy" if order.get("house") else None),
-        order.get("street"), order.get("mahalla"), order.get("region"),
-    ] if p]
-    return ", ".join(parts)
-
-
-def map_link_for(order: dict) -> str:
-    if order.get("lat") and order.get("lng"):
-        return f"https://www.google.com/maps?q={order['lat']},{order['lng']}"
-    return ""
 
 
 def build_one_order_block(order: dict, index: int) -> str:
@@ -133,42 +207,13 @@ def build_one_order_block(order: dict, index: int) -> str:
 
 def build_order_confirm_text(order: dict) -> str:
     lines = ["✅ <b>Buyurtmangiz qabul qilindi!</b>", "", build_order_detail_lines(order)]
-    addr = build_address(order)
-    if addr:
-        lines.append(f"📍 Manzil: {addr}")
-    link = map_link_for(order)
-    if link:
-        lines.append(f'🗺 <a href="{link}">Yetkazish manzili</a>')
+    if order.get("Manzil"):
+        lines.append(f"📍 Manzil: {order['Manzil']}")
+    if order.get("Xarita havolasi"):
+        lines.append(f"🗺 <a href=\"{order['Xarita havolasi']}\">Yetkazish manzili</a>")
     lines.append("")
     lines.append("Tez orada mutaxassisimiz zalog to'lovi bo'yicha siz bilan bog'lanadi.")
     return "\n".join(lines)
-
-
-def notify_admin_new_order(order_id: int, order: dict):
-    """Yangi buyurtma tushganda do'kon egasiga (ADMIN_CHAT_ID) xabar yuboradi."""
-    if not config.ADMIN_CHAT_ID or "BU_YERGA" in str(config.ADMIN_CHAT_ID):
-        logger.warning("ADMIN_CHAT_ID sozlanmagan — admin xabari yuborilmadi.")
-        return
-    lines = [
-        "🛒 <b>Yangi buyurtma — YasinDoors</b>", "",
-        f"👤 Mijoz: {order.get('name') or '—'}",
-        f"📞 Tel: {order.get('phone') or '—'}",
-        f"🚪 Model: {order.get('model') or '—'}" + (f" ({order['series']})" if order.get("series") else ""),
-    ]
-    if order.get("size"):
-        lines.append(f"📏 O'lcham: {order['size']}")
-    lines.append(f"🎨 Rang: {order.get('color_name') or '—'} ({order.get('color_hex') or '—'})")
-    lines.append(f"🔢 Miqdor: {order.get('quantity') or '—'} dona")
-    lines.append(f"💰 Umumiy: {format_som(order.get('total_price'))}")
-    lines.append(f"💵 Zalog (20%): {format_som(order.get('deposit'))}")
-    addr = build_address(order)
-    if addr:
-        lines.append(f"📍 Manzil: {addr}")
-    text = "\n".join(lines)
-
-    link = map_link_for(order)
-    keyboard = {"inline_keyboard": [[{"text": "🗺 Xaritada ko'rish", "url": link}]]} if link else None
-    send_message(config.ADMIN_CHAT_ID, text, reply_markup=keyboard, disable_preview=False)
 
 
 # ---------------------------------------------------------------------------
@@ -179,7 +224,7 @@ def send_orders_for_phone(chat_id, phone, mode, just_got_contact):
     if just_got_contact:
         send_message(chat_id, "✅ Rahmat! Qidiryapman...", reply_markup={"remove_keyboard": True})
 
-    orders = db.get_orders_by_phone(phone)
+    orders = get_orders_by_phone(phone)
     if not orders:
         send_message(chat_id, "Sizning raqamingiz bo'yicha hozircha buyurtma topilmadi.", reply_markup=BACK_KEYBOARD)
         return
@@ -203,9 +248,9 @@ def send_orders_for_phone(chat_id, phone, mode, just_got_contact):
 
 def handle_order_command(chat_id, msg, mode):
     log_user(msg)
-    phone = db.find_phone_by_chat_id(chat_id)
+    phone = find_phone_by_chat_id(chat_id)
     if not phone:
-        db.set_pending_intent(chat_id, mode)
+        set_pending_intent(chat_id, mode)
         send_message(
             chat_id,
             "Buyurtma(lar)ingizni topish uchun telefon raqamingizni tasdiqlang — pastdagi tugmani bosing:",
@@ -218,8 +263,8 @@ def handle_order_command(chat_id, msg, mode):
 def handle_order_start(chat_id, payload, msg):
     order_id = payload[2:] if payload.startswith("o_") else payload
     log_user(msg, order_id=order_id)
-    order = db.get_order(order_id) if order_id.isdigit() else None
-    if not order:
+    order = get_order(order_id)
+    if not order or not order.get("ID"):
         send_message(chat_id, "Kechirasiz, bu buyurtma topilmadi. Savolingiz bo'lsa, operator bilan bog'laning.",
                       reply_markup=BACK_KEYBOARD)
         return
@@ -227,14 +272,14 @@ def handle_order_start(chat_id, payload, msg):
 
 
 def handle_contact_shared(chat_id, contact, msg):
-    intent = db.get_pending_intent(chat_id, clear=True)
+    intent = get_pending_intent(chat_id, clear=True)
     send_orders_for_phone(chat_id, contact["phone_number"], "last" if intent == "last" else "all", True)
     log_user(msg, phone=contact["phone_number"])
 
 
 def log_user(msg, phone="", order_id=""):
     frm = msg.get("from", {})
-    db.log_telegram_user(
+    log_telegram_user(
         msg["chat"]["id"],
         first_name=frm.get("first_name", ""),
         last_name=frm.get("last_name", ""),
@@ -248,12 +293,12 @@ def looks_like_phone(text: str) -> bool:
     text = (text or "").strip()
     if not text or text.startswith("/"):
         return False
-    digits = db.only_digits(text)
+    digits = only_digits(text)
     return 7 <= len(digits) <= 13
 
 
 # ---------------------------------------------------------------------------
-# Har bir Telegram update'ni qayta ishlash (Code.gs: handleTelegramUpdate)
+# Har bir Telegram update'ni qayta ishlash
 # ---------------------------------------------------------------------------
 
 def handle_update(update: dict):
@@ -269,7 +314,7 @@ def handle_update(update: dict):
             elif data == "hours_info":
                 send_message(chat_id, HOURS_INFO_TEXT, reply_markup=BACK_KEYBOARD)
             elif data == "allorders":
-                phone = db.find_phone_by_chat_id(chat_id)
+                phone = find_phone_by_chat_id(chat_id)
                 if phone:
                     send_orders_for_phone(chat_id, phone, "all", False)
                 else:
@@ -286,8 +331,8 @@ def handle_update(update: dict):
 
             if "contact" in msg:
                 handle_contact_shared(chat_id, msg["contact"], msg)
-            elif looks_like_phone(text) and db.get_pending_intent(chat_id):
-                intent = db.get_pending_intent(chat_id, clear=True)
+            elif looks_like_phone(text) and get_pending_intent(chat_id):
+                intent = get_pending_intent(chat_id, clear=True)
                 send_orders_for_phone(chat_id, text.strip(), "last" if intent == "last" else "all", True)
                 log_user(msg, phone=text.strip())
             elif cmd == "/start":

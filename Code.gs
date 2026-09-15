@@ -1,27 +1,28 @@
 /**
- * YASINDOORS — Google Apps Script: Sheets + Telegram bot (HAMMASI BIR JOYDA)
+ * YASINDOORS — Google Apps Script: faqat Sheets ma'lumotlar bazasi
  * -----------------------------------------------------------------
- * Bu yagona fayl endi IKKI vazifani bajaradi:
+ * Bu fayl endi FAQAT Google Sheets bilan ishlaydi:
  *
- *   1) Saytdan keladigan ma'lumotlarni Google Sheets'ga yozadi
- *      (register, login, order, telegram_user) — avvalgidek.
+ *   1) Saytdan keladigan ma'lumotlarni Sheets'ga yozadi
+ *      (register, login, order, telegram_user) — doPost orqali.
  *
- *   2) Telegram botga mijoz yozganda (Cloudflare Worker orqali kelgan
- *      webhook orqali) javob qaytaradi.
+ *   2) Python botimiz (bot.py) buyurtma va telefon ma'lumotlarini
+ *      o'qishi uchun doGet orqali so'rov (query) imkoniyatini beradi.
+ *
+ * DIQQAT: bu versiyada Telegram WEBHOOK ISHLATILMAYDI. Interaktiv bot
+ * (/order, /allorder va h.k.) endi to'liq Python tomonida (bot.py),
+ * long-polling orqali ishlaydi. Shuning uchun bu Web App manziliga
+ * setWebhook QILMANG — aks holda Python botning polling'i ishlamay qoladi
+ * (Telegram bir vaqtning o'zida faqat bittasiga — webhook YOKI polling'ga — yangilanish yuboradi).
  *
  * ====================== O'RNATISH ======================
- * 1. Pastdagi TELEGRAM_BOT_TOKEN qiymatini tekshiring (allaqachon to'ldirilgan).
+ * 1. Pastdagi TELEGRAM_BOT_TOKEN qiymatini tekshiring (allaqachon to'ldirilgan,
+ *    lekin bu faylda endi shart emas — faqat eski qatorlar bilan mosligi uchun qoldirildi).
  * 2. Bu faylni to'liq joylashtirgach, Deploy → Manage deployments →
  *    tahrirlash (qalam) → Version: New version → Deploy qiling.
- * 3. Web App URL'ingizni (sheets-config.js'dagi bilan bir xil) oling —
- *    shu manzil cloudflare-worker.js dagi APPS_SCRIPT_URL bilan bir xil
- *    bo'lishi kerak.
- * 4. Telegram webhookni Apps Script'ga emas, Cloudflare Worker manziliga
- *    o'rnating:
- *    https://api.telegram.org/bot<TOKEN>/setWebhook?url=<WORKER_URL>
- *    Javobda "ok":true chiqsa — tayyor.
- * DIQQAT: bu versiyada polling/trigger ISHLATILMAYDI — webhook va
- * polling bir vaqtda ishlay olmaydi.
+ * 3. Web App URL'ni (https://script.google.com/macros/s/.../exec) nusxalab,
+ *    Python tarafdagi config.py'dagi SHEETS_WEBHOOK_URL'ga va sayt tarafdagi
+ *    bot-config.js'dagi SHEETS_WEBHOOK_URL'ga qo'ying.
  * =========================================================
  */
 
@@ -93,9 +94,27 @@ function doPost(e) {
   }
 }
 
-// GET so'rov: brauzerda ochib tekshirish uchun
+// GET so'rov: brauzerda ochib tekshirish uchun VA botimiz ma'lumot so'rashi uchun
+// ?action=order&id=...      -> bitta buyurtma (ID bo'yicha)
+// ?action=orders&phone=...  -> telefon bo'yicha barcha buyurtmalar
+// ?action=phone&chat_id=... -> shu Telegram chat oldin ulashgan telefon raqami
 function doGet(e) {
+  var action = e.parameter.action;
+  if (action === 'order') {
+    return jsonOutput(findOrderByIdDirect(e.parameter.id));
+  }
+  if (action === 'orders') {
+    return jsonOutput(findOrdersByPhoneDirect(e.parameter.phone));
+  }
+  if (action === 'phone') {
+    return jsonOutput({ phone: findPhoneByChatIdDirect(e.parameter.chat_id) });
+  }
   return ContentService.createTextOutput('YasinDoors Sheets/Bot qabul qiluvchisi ishlayapti.');
+}
+
+function jsonOutput(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function onlyDigits(s) {
