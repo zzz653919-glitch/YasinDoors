@@ -33,6 +33,20 @@ var TELEGRAM_BOT_TOKEN = '8826409917:AAEwg7jIK_YyYpAthEf3oqd8vKMzu5ONwPg';
 var ADMIN_CHAT_ID = '170310198';
 var WEBSITE_URL = 'https://zzz653919-glitch.github.io';
 
+// To'lov va aloqa rekvizitlari (/start bosilganda shular chiroyli chiqariladi)
+var PAY_CARD_NUMBER = '1234567891234567';
+var PAY_CARD_HOLDER = 'YasinDoors';
+var WORK_HOURS_LINE = 'Dushanba–Shanba, 09:00–19:00';
+var MAP_LINK = 'https://maps.app.goo.gl/oFEyE3jcY1ZPsXMJ9';
+var CONTACT_PHONE_DISPLAY = '+998 93 300 20 20';
+var CONTACT_PHONE_TEL = '+998933002020';
+
+// Karta raqamini "1234 5678 9123 4567" ko'rinishida chiroyli formatlaydi
+function formatCardNumber(num) {
+  var digits = String(num || '').replace(/\D/g, '');
+  return digits.replace(/(.{4})/g, '$1 ').trim();
+}
+
 
 // ================== SHEETS: USTUNLAR SOZLAMASI ==================
 
@@ -355,10 +369,22 @@ function notifyAdminNewOrder(data) {
 
 var WELCOME_TEXT =
   "🚪 <b>YasinDoors botiga xush kelibsiz!</b>\n\n" +
-  "Bu yerda siz:\n" +
-  "📦 /order — eng so'nggi buyurtmangizni ko'rishingiz\n" +
-  "🗂 /allorder — barcha buyurtmalaringiz ro'yxatini olishingiz\n" +
-  "💳 To'lov shartlari va 🕐 ish vaqtimiz bilan tanishishingiz mumkin.\n\n" +
+  "━━━━━━━━━━━━━━━\n" +
+  "🕐 <b>Ish vaqti</b>\n" +
+  WORK_HOURS_LINE + "\n\n" +
+  "💳 <b>To'lov</b>\n" +
+  "Buyurtmani tasdiqlash uchun umumiy summaning <b>20%</b>i zalog sifatida quyidagi kartaga o'tkaziladi:\n" +
+  "<code>" + formatCardNumber(PAY_CARD_NUMBER) + "</code>\n" +
+  "👤 " + PAY_CARD_HOLDER + "\n" +
+  "Qolgan qismi yetkazib berilganda naqd yoki plastik karta orqali to'lanadi.\n\n" +
+  "📍 <b>Manzil</b>\n" +
+  "<a href=\"" + MAP_LINK + "\">Xaritada ko'rish</a>\n\n" +
+  "📞 <b>Telefon</b>\n" +
+  "<a href=\"tel:" + CONTACT_PHONE_TEL + "\">" + CONTACT_PHONE_DISPLAY + "</a>\n" +
+  "━━━━━━━━━━━━━━━\n\n" +
+  "Bundan tashqari:\n" +
+  "📦 /order — eng so'nggi buyurtmangizni ko'rish\n" +
+  "🗂 /allorder — barcha buyurtmalaringiz ro'yxati\n\n" +
   "Savolingiz bo'lsa — pastdagi tugmalardan foydalaning yoki operatorimizga qo'ng'iroq qiling.";
 
 var MAIN_MENU_TEXT =
@@ -385,17 +411,16 @@ var BACK_KEYBOARD = {
 
 var PAY_INFO_TEXT =
   "💳 <b>To'lov usullari</b>\n\n" +
-  "Buyurtma tasdiqlash uchun umumiy summaning <b>20%</b> miqdorida zalog (oldindan to'lov) olinadi.\n" +
+  "Buyurtma tasdiqlash uchun umumiy summaning <b>20%</b> miqdorida zalog (oldindan to'lov) olinadi. Zalogni quyidagi kartaga o'tkazishingiz mumkin:\n\n" +
+  "<code>" + formatCardNumber(PAY_CARD_NUMBER) + "</code>\n" +
+  "👤 " + PAY_CARD_HOLDER + "\n\n" +
   "Qolgan qismi eshik yetkazib berilganda <b>naqd</b> yoki <b>plastik karta</b> orqali to'lanadi.\n\n" +
-  "Zalogni qanday to'lash mumkin:\n" +
-  "1️⃣ Operatorimiz siz bilan bog'lanib, to'lov havolasi yoki karta raqamini yuboradi\n" +
-  "2️⃣ Yoki ofisimizga kelib naqd to'lashingiz mumkin\n\n" +
-  "Aniq to'lov rekvizitlari uchun operator bilan bog'laning: <a href=\"tel:+998933002020\">+998 93 300 20 20</a>";
+  "Savolingiz bo'lsa operator bilan bog'laning: <a href=\"tel:" + CONTACT_PHONE_TEL + "\">" + CONTACT_PHONE_DISPLAY + "</a>";
 
 var HOURS_INFO_TEXT =
-  "🕐 <b>Ish vaqti</b>: Dushanba–Shanba, 09:00–19:00\n\n" +
-  "📍 <b>Manzil</b>: <a href=\"https://maps.app.goo.gl/oFEyE3jcY1ZPsXMJ9\">Xaritada ko'rish</a>\n\n" +
-  "📞 Telefon: <a href=\"tel:+998933002020\">+998 93 300 20 20</a>";
+  "🕐 <b>Ish vaqti</b>: " + WORK_HOURS_LINE + "\n\n" +
+  "📍 <b>Manzil</b>: <a href=\"" + MAP_LINK + "\">Xaritada ko'rish</a>\n\n" +
+  "📞 Telefon: <a href=\"tel:" + CONTACT_PHONE_TEL + "\">" + CONTACT_PHONE_DISPLAY + "</a>";
 
 var CONTACT_REQUEST_KEYBOARD = {
   keyboard: [[{ text: '📞 Telefon raqamimni yuborish', request_contact: true }]],
