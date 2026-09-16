@@ -18,7 +18,7 @@ BOT_USERNAME = os.environ.get("BOT_USERNAME", "YasinDoors_Jizzax_bot")
 # Code.gs faylini Google Apps Script'da Deploy → New deployment → Web app
 # qilganingizda olingan havola (https://script.google.com/macros/s/.../exec).
 # Bot shu manzil orqali buyurtmalarni Sheets'dan o'qiydi.
-SHEETS_WEBHOOK_URL = os.environ.get("SHEETS_WEBHOOK_URL", "https://script.google.com/macros/s/AKfycbyAI5pA5XBIg7uYbV2Wx1FXceS_RxCTir9kLKXSkS4btzcSaNUze7SkwH-OQdGmzGE68A/exec")
+SHEETS_WEBHOOK_URL = os.environ.get("SHEETS_WEBHOOK_URL", "https://script.google.com/macros/s/AKfycbwa05Qd2A2JyFodYXkayIJDdpozE2hjxpg1eGvQEqF8_TNw9lhW86q99Bapj_Mg4dooXg/exec")
 
 # --------------------------------------------------------------------------
 # Sayt va aloqa ma'lumotlari
