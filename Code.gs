@@ -61,6 +61,12 @@ function doPost(e) {
 
     // ---- Telegram'dan (Cloudflare Worker "ko'prigi" orqali) kelgan yangilanish ----
     if (data.update_id !== undefined) {
+      if (isDuplicateUpdate(data.update_id)) {
+        // Telegram shu update'ni qayta yubordi (masalan, redirect/timeout sababli) —
+        // uni qayta ishlamaymiz, aks holda bot bir xabarga bir necha marta javob beradi.
+        return ContentService.createTextOutput(JSON.stringify({ ok: true, duplicate: true }))
+          .setMimeType(ContentService.MimeType.JSON);
+      }
       handleTelegramUpdate(data);
       return ContentService.createTextOutput(JSON.stringify({ ok: true }))
         .setMimeType(ContentService.MimeType.JSON);
@@ -266,6 +272,19 @@ function findPhoneByChatIdDirect(chatId) {
 
 function setPendingIntentDirect(chatId, intent) {
   CacheService.getScriptCache().put('pending_' + chatId, String(intent || ''), 300);
+}
+
+// Telegram ba'zan bitta yangilanishni (update_id) bir necha marta qayta yuborishi
+// mumkin (masalan, /exec havolasining 302 redirect javobi sabab bo'lishi mumkin).
+// Shu funksiya har bir update_id'ni 10 daqiqa eslab qoladi va takrorini o'tkazmaydi —
+// shu tufayli bot bir xabarga bir necha marta javob yozmaydi.
+function isDuplicateUpdate(updateId) {
+  if (updateId === undefined || updateId === null) return false;
+  var cache = CacheService.getScriptCache();
+  var key = 'upd_' + updateId;
+  if (cache.get(key)) return true;
+  cache.put(key, '1', 600);
+  return false;
 }
 
 function getPendingIntentDirect(chatId, clear) {
