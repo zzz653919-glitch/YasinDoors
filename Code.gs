@@ -29,7 +29,7 @@
 
 // ================== SOZLAMALAR ==================
 
-var TELEGRAM_BOT_TOKEN = '8919097362:AAFvgfRWGg4ZIIJ9Pi0bsxxPVCqSIqI_eLw';
+var TELEGRAM_BOT_TOKEN = '8826409917:AAEwg7jIK_YyYpAthEf3oqd8vKMzu5ONwPg';
 var ADMIN_CHAT_ID = '170310198';
 var WEBSITE_URL = 'https://zzz653919-glitch.github.io';
 

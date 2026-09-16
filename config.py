@@ -4,7 +4,7 @@ import os
 # Telegram bot sozlamalari
 # --------------------------------------------------------------------------
 # @BotFather'dan olingan token
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "8919097362:AAFvgfRWGg4ZIIJ9Pi0bsxxPVCqSIqI_eLw")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8826409917:AAEwg7jIK_YyYpAthEf3oqd8vKMzu5ONwPg")
 
 # Yangi buyurtma haqidagi xabarlar boradigan chat (do'kon egasi/admin)
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID", "170310198")
@@ -18,7 +18,7 @@ BOT_USERNAME = os.environ.get("BOT_USERNAME", "YasinDoors_Jizzax_bot")
 # Code.gs faylini Google Apps Script'da Deploy → New deployment → Web app
 # qilganingizda olingan havola (https://script.google.com/macros/s/.../exec).
 # Bot shu manzil orqali buyurtmalarni Sheets'dan o'qiydi.
-SHEETS_WEBHOOK_URL = os.environ.get("SHEETS_WEBHOOK_URL", "BU_YERGA_APPS_SCRIPT_WEB_APP_URL_QOYING")
+SHEETS_WEBHOOK_URL = os.environ.get("SHEETS_WEBHOOK_URL", "https://script.google.com/macros/s/AKfycbyAI5pA5XBIg7uYbV2Wx1FXceS_RxCTir9kLKXSkS4btzcSaNUze7SkwH-OQdGmzGE68A/exec")
 
 # --------------------------------------------------------------------------
 # Sayt va aloqa ma'lumotlari

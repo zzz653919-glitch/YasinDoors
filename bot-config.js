@@ -11,4 +11,4 @@ window.SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyAI5pA5XBI
 
 // Botingizning @username'i (@ belgisisiz) — "Buyurtmani Telegramda
 // kuzatish" havolalari shu orqali quriladi.
-window.TELEGRAM_BOT_USERNAME = '@YasinDoors_Jizzax_bot';
+window.TELEGRAM_BOT_USERNAME = 'YasinDoors_Jizzax_bot';
