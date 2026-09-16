@@ -552,8 +552,12 @@ function handleTelegramUpdate(update) {
 
       if (update.message.contact) {
         handleContactShared(msgChatId, update.message.contact, update.message);
-      } else if (looksLikePhone(text) && getPendingIntentDirect(msgChatId, false)) {
-        var typedIntent = getPendingIntentDirect(msgChatId, true);
+      } else if (looksLikePhone(text)) {
+        // Mijoz istalgan vaqtda telefon raqamini yozsa — avval biror buyruq
+        // bermagan bo'lsa ham — shu raqam bo'yicha buyurtma(lar)ni topib beramiz.
+        // Agar oldin /order yoki /allorder so'ralgan bo'lsa, o'sha niyat (last/all)
+        // hisobga olinadi; aks holda eng so'nggi buyurtma ko'rsatiladi.
+        var typedIntent = getPendingIntentDirect(msgChatId, true) || 'last';
         sendOrdersForPhone(msgChatId, text.trim(), typedIntent === 'last' ? 'last' : 'all', true);
         logTelegramUserDirect(update.message, { phone: text.trim() });
       } else if (cmd === '/start') {
