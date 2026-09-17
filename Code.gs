@@ -432,12 +432,15 @@ var WELCOME_TEXT =
   "Savolingiz bo'lsa — pastdagi tugmalardan foydalaning yoki operatorimizga qo'ng'iroq qiling.";
 
 var MAIN_MENU_TEXT =
-  "🙋 Men <b>YasinDoors</b> botiman.\n\n" +
-  "Quyidagi buyruqlardan foydalanishingiz mumkin:\n" +
+  "🚪 <b>YasinDoors</b> — eshiklar ustaxonasi botiga xush kelibsiz!\n\n" +
+  "━━━━━━━━━━━━━━━\n" +
+  "🤖 <b>Bot nima qila oladi?</b>\n\n" +
   "📦 /order — eng so'nggi buyurtmangiz haqida ma'lumot\n" +
   "🗂 /allorder — barcha buyurtmalaringiz ro'yxati\n" +
-  "❓ /help — shu yordam xabarini qayta ko'rish\n\n" +
-  "Yoki quyidagi tugmalardan birini tanlang:";
+  "❓ /help — shu yordam xabarini qayta ko'rish\n" +
+  "━━━━━━━━━━━━━━━\n\n" +
+  "💳 To'lov shartlari va 🕐 ish vaqtimiz bilan pastdagi tugmalar orqali tanishishingiz mumkin, " +
+  "yoki 🌐 saytimizga o'tib to'liq katalogni ko'rishingiz mumkin.";
 
 var MAIN_MENU_KEYBOARD = {
   inline_keyboard: [
