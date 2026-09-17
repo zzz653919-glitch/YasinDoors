@@ -185,6 +185,10 @@ function writeRow(ss, sheetName, headers, row) {
     textCols.forEach(function (col) {
       sheet.getRange(1, col, sheet.getMaxRows(), 1).setNumberFormat('@');
     });
+    // Sana ustuni: butun ustun uchun bir marta formatlanadi (creation vaqtida),
+    // shu tufayli har bir qator qo'shilganda alohida setNumberFormat chaqirish
+    // shart emas — bu har bir yozuvni sezilarli tezlashtiradi.
+    sheet.getRange(2, 1, sheet.getMaxRows() - 1, 1).setNumberFormat('dd.MM.yyyy HH:mm');
 
     var widths = { 'Sana': 130, 'Ism': 170, 'Familiya': 150, 'Telefon': 150,
       'Kod': 130, 'Sahifa': 160, 'Chat ID': 130, 'Username': 150 };
@@ -201,11 +205,6 @@ function writeRow(ss, sheetName, headers, row) {
 
   sheet.appendRow(row);
   var lastRow = sheet.getLastRow();
-
-  sheet.getRange(lastRow, 1).setNumberFormat('dd.MM.yyyy HH:mm');
-  textCols.forEach(function (col) {
-    sheet.getRange(lastRow, col).setNumberFormat('@');
-  });
 
   sheet.getRange(lastRow, 1, 1, headers.length)
     .setBackground(lastRow % 2 === 0 ? ROW_BG_EVEN : ROW_BG_ODD)
@@ -332,27 +331,18 @@ function setPendingIntentDirect(chatId, intent) {
 // Shu funksiya har bir update_id'ni 6 soat eslab qoladi (CacheService'ning
 // maksimal muddati) va takrorini o'tkazmaydi — shu tufayli mijoz botga hech
 // narsa yozmagan bo'lsa ham, eskirgan qayta urinish tufayli bot unga qayta
-// javob yozib yubormaydi. LockService — ikki so'rov millisekund farqi bilan
-// bir vaqtda kelib qolganda ham (tekshirish + belgilash bo'linib ketmasin
-// deb) mijozga ikkita xabar ketib qolmasligini kafolatlaydi.
+// javob yozib yubormaydi.
+// ESLATMA: bu yerda ataylab LockService ishlatilmaydi — u har bir xabarga
+// qo'shimcha kutish vaqti (ba'zan bir necha soniya) qo'shib, botni "qotib
+// qolgandek" sekinlashtirar edi. CacheService'ning o'zi amaliyotda yetarlicha
+// ishonchli va TEZ.
 function isDuplicateUpdate(updateId) {
   if (updateId === undefined || updateId === null) return false;
-  var lock = LockService.getScriptLock();
-  try {
-    lock.waitLock(5000);
-  } catch (e) {
-    // Qulf 5 soniyada bo'shamasa — baribir davom etamiz, xavfsizroq tomoni
-    // qayta ishlash, chunki mijozga javob yubormay qolib ketishdan yaxshi.
-  }
-  try {
-    var cache = CacheService.getScriptCache();
-    var key = 'upd_' + updateId;
-    if (cache.get(key)) return true;
-    cache.put(key, '1', 21600);
-    return false;
-  } finally {
-    try { lock.releaseLock(); } catch (e) {}
-  }
+  var cache = CacheService.getScriptCache();
+  var key = 'upd_' + updateId;
+  if (cache.get(key)) return true;
+  cache.put(key, '1', 21600);
+  return false;
 }
 
 function getPendingIntentDirect(chatId, clear) {
