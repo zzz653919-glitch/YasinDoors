@@ -47,6 +47,14 @@ function formatCardNumber(num) {
   return digits.replace(/(.{4})/g, '$1 ').trim();
 }
 
+// Jadvalni har safar qayta ochish (SpreadsheetApp.getActiveSpreadsheet()) botni
+// sekinlashtiradi — shu execution ichida bir marta ochib, keshlab qo'yamiz.
+var _ssCache = null;
+function getSS() {
+  if (!_ssCache) _ssCache = SpreadsheetApp.getActiveSpreadsheet();
+  return _ssCache;
+}
+
 
 // ================== SHEETS: USTUNLAR SOZLAMASI ==================
 
@@ -87,7 +95,7 @@ function doPost(e) {
     }
 
     // ---- Saytdan kelgan oddiy ma'lumotlar ----
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = getSS();
     var now = new Date();
 
     if (data.type === 'register') {
@@ -207,20 +215,35 @@ function writeRow(ss, sheetName, headers, row) {
 
 // ================== SHEETS: BOT UCHUN TO'G'RIDAN-TO'G'RI FUNKSIYALAR ==================
 
+// Bir xil chat_id uchun har xabarda qayta-qayta Sheets'ga yozmaslik uchun —
+// 6 soat ichida bir marta yozilgan bo'lsa, keyingi oddiy xabarlarda
+// (menyu/help/noma'lum matn) qayta yozilmaydi. Yangi telefon yoki buyurtma
+// ID kelsa — bu tekshiruvdan qat'iy nazar, baribir yoziladi.
+function shouldLogTelegramUser(chatId, extra) {
+  if (extra && (extra.phone || extra.order_id)) return true;
+  var cache = CacheService.getScriptCache();
+  var key = 'loguser_' + chatId;
+  if (cache.get(key)) return false;
+  cache.put(key, '1', 21600); // 6 soat (CacheService'ning maksimal muddati)
+  return true;
+}
+
 function logTelegramUserDirect(msg, extra) {
   try {
-    var from = msg.from || {};
     extra = extra || {};
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!shouldLogTelegramUser(msg.chat.id, extra)) return;
+    var from = msg.from || {};
+    var ss = getSS();
     writeRow(ss, 'Telegram foydalanuvchilari', ['Sana', 'Chat ID', 'Ism', 'Familiya', 'Username', 'Telefon', 'Buyurtma ID'],
       [new Date(), msg.chat.id, from.first_name || '', from.last_name || '', from.username || '', extra.phone || '', extra.order_id || '']);
+    if (extra.phone) cachePhoneForChat(msg.chat.id, extra.phone);
   } catch (err) {
     console.error('logTelegramUserDirect xatoligi:', err);
   }
 }
 
 function findOrdersByPhoneDirect(phone) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSS();
   var sheet = ss.getSheetByName('Buyurtmalar');
   var orders = [];
   var target = onlyDigits(phone).slice(-9);
@@ -246,7 +269,7 @@ function findOrdersByPhoneDirect(phone) {
 }
 
 function findOrderByIdDirect(id) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = getSS();
   var sheet = ss.getSheetByName('Buyurtmalar');
   if (!sheet) return null;
 
@@ -265,23 +288,38 @@ function findOrderByIdDirect(id) {
   return null;
 }
 
+// Telefon raqamni chat_id bo'yicha keshdan (tez) qaytaradi; kesh bo'sh bo'lsa
+// birgina safar varaqni skanerlab, natijani 6 soatga keshlaydi — shu tufayli
+// har bir /order, /allorder yoki tugma bosilganda butun varaq qayta o'qilmaydi.
+function cachePhoneForChat(chatId, phone) {
+  CacheService.getScriptCache().put('phone_' + chatId, String(phone || ''), 21600);
+}
+
 function findPhoneByChatIdDirect(chatId) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var cache = CacheService.getScriptCache();
+  var cacheKey = 'phone_' + chatId;
+  var cached = cache.get(cacheKey);
+  if (cached !== null) return cached;
+
+  var phone = '';
+  var ss = getSS();
   var sheet = ss.getSheetByName('Telegram foydalanuvchilari');
-  if (!sheet) return '';
-
-  var values = sheet.getDataRange().getValues();
-  var headers = values[0];
-  var chatCol = headers.indexOf('Chat ID');
-  var phoneCol = headers.indexOf('Telefon');
-  if (chatCol === -1 || phoneCol === -1) return '';
-
-  for (var i = values.length - 1; i >= 1; i--) {
-    if (String(values[i][chatCol]) === String(chatId) && values[i][phoneCol]) {
-      return String(values[i][phoneCol]);
+  if (sheet) {
+    var values = sheet.getDataRange().getValues();
+    var headers = values[0];
+    var chatCol = headers.indexOf('Chat ID');
+    var phoneCol = headers.indexOf('Telefon');
+    if (chatCol !== -1 && phoneCol !== -1) {
+      for (var i = values.length - 1; i >= 1; i--) {
+        if (String(values[i][chatCol]) === String(chatId) && values[i][phoneCol]) {
+          phone = String(values[i][phoneCol]);
+          break;
+        }
+      }
     }
   }
-  return '';
+  cache.put(cacheKey, phone, 21600);
+  return phone;
 }
 
 function setPendingIntentDirect(chatId, intent) {
@@ -289,16 +327,32 @@ function setPendingIntentDirect(chatId, intent) {
 }
 
 // Telegram ba'zan bitta yangilanishni (update_id) bir necha marta qayta yuborishi
-// mumkin (masalan, /exec havolasining 302 redirect javobi sabab bo'lishi mumkin).
-// Shu funksiya har bir update_id'ni 10 daqiqa eslab qoladi va takrorini o'tkazmaydi —
-// shu tufayli bot bir xabarga bir necha marta javob yozmaydi.
+// mumkin (masalan, /exec havolasining 302 redirect javobi sabab bo'lishi mumkin —
+// Telegram buni xatolik deb hisoblab, o'sha xabarni keyinroq qayta jo'natadi).
+// Shu funksiya har bir update_id'ni 6 soat eslab qoladi (CacheService'ning
+// maksimal muddati) va takrorini o'tkazmaydi — shu tufayli mijoz botga hech
+// narsa yozmagan bo'lsa ham, eskirgan qayta urinish tufayli bot unga qayta
+// javob yozib yubormaydi. LockService — ikki so'rov millisekund farqi bilan
+// bir vaqtda kelib qolganda ham (tekshirish + belgilash bo'linib ketmasin
+// deb) mijozga ikkita xabar ketib qolmasligini kafolatlaydi.
 function isDuplicateUpdate(updateId) {
   if (updateId === undefined || updateId === null) return false;
-  var cache = CacheService.getScriptCache();
-  var key = 'upd_' + updateId;
-  if (cache.get(key)) return true;
-  cache.put(key, '1', 600);
-  return false;
+  var lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(5000);
+  } catch (e) {
+    // Qulf 5 soniyada bo'shamasa — baribir davom etamiz, xavfsizroq tomoni
+    // qayta ishlash, chunki mijozga javob yubormay qolib ketishdan yaxshi.
+  }
+  try {
+    var cache = CacheService.getScriptCache();
+    var key = 'upd_' + updateId;
+    if (cache.get(key)) return true;
+    cache.put(key, '1', 21600);
+    return false;
+  } finally {
+    try { lock.releaseLock(); } catch (e) {}
+  }
 }
 
 function getPendingIntentDirect(chatId, clear) {
@@ -486,15 +540,15 @@ function buildOrderConfirmText(order) {
 
 function handleOrderStart(chatId, payload, msg) {
   var orderId = payload.indexOf('o_') === 0 ? payload.slice(2) : payload;
-  logTelegramUserDirect(msg, { order_id: orderId });
-
   var order = findOrderByIdDirect(orderId);
+
   if (!order) {
     callTelegram('sendMessage', {
       chat_id: chatId,
       text: "Kechirasiz, bu buyurtma topilmadi. Savolingiz bo'lsa, operator bilan bog'laning.",
       reply_markup: BACK_KEYBOARD
     });
+    logTelegramUserDirect(msg, { order_id: orderId });
     return;
   }
 
@@ -505,6 +559,7 @@ function handleOrderStart(chatId, payload, msg) {
     disable_web_page_preview: false,
     reply_markup: BACK_KEYBOARD
   });
+  logTelegramUserDirect(msg, { order_id: orderId });
 }
 
 function sendOrdersForPhone(chatId, phone, mode, justGotContact) {
@@ -542,7 +597,6 @@ function sendOrdersForPhone(chatId, phone, mode, justGotContact) {
 }
 
 function handleOrderCommand(chatId, msg, mode) {
-  logTelegramUserDirect(msg);
   var phone = findPhoneByChatIdDirect(chatId);
 
   if (!phone) {
@@ -552,10 +606,12 @@ function handleOrderCommand(chatId, msg, mode) {
       text: "Buyurtma(lar)ingizni topish uchun telefon raqamingizni tasdiqlang — pastdagi tugmani bosing:",
       reply_markup: CONTACT_REQUEST_KEYBOARD
     });
+    logTelegramUserDirect(msg);
     return;
   }
 
   sendOrdersForPhone(chatId, phone, mode, false);
+  logTelegramUserDirect(msg);
 }
 
 function handleContactShared(chatId, contact, msg) {
@@ -611,19 +667,19 @@ function handleTelegramUpdate(update) {
         } else if (payload) {
           handleOrderStart(msgChatId, payload, update.message);
         } else {
-          logTelegramUserDirect(update.message);
           sendWelcome(msgChatId);
+          logTelegramUserDirect(update.message);
         }
       } else if (cmd === '/order') {
         handleOrderCommand(msgChatId, update.message, 'last');
       } else if (cmd === '/allorder' || cmd === '/allorders') {
         handleOrderCommand(msgChatId, update.message, 'all');
       } else if (cmd === '/help') {
-        logTelegramUserDirect(update.message);
         sendMenu(msgChatId);
+        logTelegramUserDirect(update.message);
       } else {
-        logTelegramUserDirect(update.message);
         sendMenu(msgChatId);
+        logTelegramUserDirect(update.message);
       }
     }
   } catch (err) {
