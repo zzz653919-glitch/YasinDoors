@@ -679,3 +679,86 @@ function handleTelegramUpdate(update) {
     console.error('handleTelegramUpdate xatoligi:', err);
   }
 }
+
+// ================== TELEGRAM: POLLING (WEBHOOK O'RNIGA, TASHQI XIZMATSIZ) ==================
+//
+// Ba'zan Telegram GAS /exec manzilidan qaytgan "302 redirect"ni xato deb
+// hisoblab, webhook orqali umuman xabar yubormay qo'yadi ("Wrong response
+// from the webhook: 302 Found"). Bu — Apps Script'ning o'zi tomonidan barcha
+// so'rovlarga standart javob berish usuli, kod bilan o'zgartirib bo'lmaydi.
+//
+// YECHIM (tashqi xizmatsiz, 100% Google Apps Script ichida): webhookdan voz
+// kechib, botning o'zi Telegramdan vaqti-vaqti bilan "bormi yangi xabar?" deb
+// so'rab turadi (polling). Bu holatda GAS Telegramga CHIQUVCHI so'rov yuboradi
+// (UrlFetchApp orqali) — Telegram API bunda to'g'ridan-to'g'ri JSON qaytaradi,
+// hech qanday redirect muammosi yo'q.
+//
+// ESLATMA: bu usulda javob real vaqtda emas — eng ko'pi bilan ~1 daqiqagacha
+// (trigger oralig'i) kechikishi mumkin, lekin bot HAR DOIM barqaror ishlaydi.
+
+var OFFSET_PROP_KEY = 'telegram_update_offset';
+
+function getUpdateOffset_() {
+  var v = PropertiesService.getScriptProperties().getProperty(OFFSET_PROP_KEY);
+  return v ? Number(v) : 0;
+}
+
+function setUpdateOffset_(offset) {
+  PropertiesService.getScriptProperties().setProperty(OFFSET_PROP_KEY, String(offset));
+}
+
+// Har safar trigger ishga tushganda Telegramdan yangi xabarlarni so'rab,
+// ularni ketma-ket qayta ishlaydi (bir so'rovda bir nechtasi kelishi mumkin).
+function pollTelegramUpdates() {
+  var offset = getUpdateOffset_();
+  var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/getUpdates'
+    + '?offset=' + (offset ? offset + 1 : 0)
+    + '&timeout=0&limit=50';
+
+  try {
+    var res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    var data = JSON.parse(res.getContentText());
+    if (!data.ok || !data.result || !data.result.length) return;
+
+    data.result.forEach(function (update) {
+      try {
+        if (!isDuplicateUpdate(update.update_id)) {
+          handleTelegramUpdate(update);
+        }
+      } catch (innerErr) {
+        console.error('pollTelegramUpdates: bitta update xatoligi:', innerErr);
+      }
+      offset = update.update_id;
+    });
+
+    setUpdateOffset_(offset);
+  } catch (err) {
+    console.error('pollTelegramUpdates xatoligi:', err);
+  }
+}
+
+// ---- BIR MARTALIK O'RNATISH ----
+// Apps Script muharririda yuqoridagi funksiyalar ro'yxatidan
+// "installTelegramPolling" ni tanlab, "Bajarish" (Run) tugmasini BIR MARTA
+// bosing. U eski webhookni o'chiradi va har 1 daqiqada avtomatik ishlaydigan
+// trigger o'rnatadi — shundan keyin bot polling orqali ishlay boshlaydi va
+// qayta hech narsa qilish shart emas.
+function installTelegramPolling() {
+  // Bir necha marta ishga tushirilsa ham takroriy trigger yaratilmasligi uchun
+  // avval shu funksiyaga tegishli eski trigerlarni tozalaymiz.
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    if (t.getHandlerFunction() === 'pollTelegramUpdates') {
+      ScriptApp.deleteTrigger(t);
+    }
+  });
+
+  ScriptApp.newTrigger('pollTelegramUpdates')
+    .timeBased()
+    .everyMinutes(1)
+    .create();
+
+  // Webhook va polling bir vaqtda ishlay olmaydi — webhookni o'chiramiz.
+  callTelegram('deleteWebhook', {});
+
+  console.log("Tayyor: polling trigger o'rnatildi, webhook o'chirildi.");
+}
