@@ -314,14 +314,107 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // ---------- "Saqlash" (yurak) tugmasi — mahalliy vizual belgi (mobil market VA desktop katalog) ----------
+  // ---------- "Saqlash" (yurak) tugmasi — Sevimli modellarni localStorage'da saqlaydi ----------
+  var FAVORITES_KEY = 'yasindoors-favorites';
+
+  function readFavorites() {
+    try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '{}'); } catch (e) { return {}; }
+  }
+  function writeFavorites(favs) {
+    try { localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs)); } catch (e) {}
+  }
+  // Kartochkadan model ma'lumotlarini (nomi, rasmi, narxi va h.k.) o'qib olish
+  function extractModelData(card, isMobile) {
+    var thumb = card.querySelector(isMobile ? '.mp-card-media' : '.model-thumb');
+    var badgeEl = thumb ? thumb.querySelector(isMobile ? '.mp-badge' : '.model-badge') : null;
+    var doorSvg = thumb ? thumb.querySelectorAll(':scope > svg') : [];
+    var nameEl = card.querySelector('h3');
+    var descEl = card.querySelector(isMobile ? '.mp-desc' : '.model-body p');
+    var priceEl = card.querySelector(isMobile ? '.mp-price' : '.price');
+    var linkEl = card.querySelector(isMobile ? '.mp-card-body a' : '.model-price a');
+    var seriesEl = card.querySelector('.mtag');
+    return {
+      name: nameEl ? nameEl.textContent.trim() : '',
+      badge: badgeEl ? badgeEl.textContent.trim() : '',
+      series: seriesEl ? seriesEl.textContent.trim() : '',
+      desc: descEl ? descEl.textContent.trim() : '',
+      price: priceEl ? priceEl.textContent.trim() : '',
+      href: linkEl ? linkEl.getAttribute('href') : '',
+      svg: doorSvg.length ? doorSvg[doorSvg.length - 1].outerHTML : ''
+    };
+  }
+
   document.querySelectorAll('.mp-heart, .model-heart').forEach(function (btn) {
+    var isMobile = btn.classList.contains('mp-heart');
+    var card = btn.closest(isMobile ? '.mp-card' : '.model-card');
+    var data = card ? extractModelData(card, isMobile) : null;
+
+    // Sahifa ochilganda, avval saqlangan modellarning yuragini faollashtirish
+    if (data && data.name && readFavorites()[data.name]) {
+      btn.classList.add('saved');
+    }
+
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
       btn.classList.toggle('saved');
+      if (!data || !data.name) return;
+      var favs = readFavorites();
+      if (btn.classList.contains('saved')) {
+        favs[data.name] = data;
+      } else {
+        delete favs[data.name];
+      }
+      writeFavorites(favs);
     });
   });
+
+  // ---------- "Sevimli modellar" sahifasi — saqlangan modellarni chiqarish ----------
+  var favGrid = document.getElementById('favGrid');
+  var favEmpty = document.getElementById('favEmpty');
+  if (favGrid) {
+    var favorites = readFavorites();
+    var favNames = Object.keys(favorites);
+
+    if (favNames.length === 0) {
+      if (favEmpty) favEmpty.style.display = 'block';
+    } else {
+      favNames.forEach(function (name) {
+        var m = favorites[name];
+        var col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4';
+        col.innerHTML =
+          '<div class="model-card">' +
+            '<div class="model-thumb">' +
+              (m.badge ? '<div class="model-badge">' + m.badge + '</div>' : '') +
+              '<button type="button" class="model-heart saved" aria-label="Sevimlilardan olib tashlash" data-fav-name="' + name.replace(/"/g, '&quot;') + '"><svg viewBox="0 0 24 24"><path d="M12 21c-5-3.6-9-7-9-11.3C3 6 5.4 4 8 4c1.7 0 3.2.9 4 2.3C12.8 4.9 14.3 4 16 4c2.6 0 5 2 5 5.7 0 4.3-4 7.7-9 11.3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></button>' +
+              (m.svg || '') +
+            '</div>' +
+            '<div class="model-body">' +
+              (m.series ? '<div class="mtag">' + m.series + '</div>' : '') +
+              '<h3>' + name + '</h3>' +
+              (m.desc ? '<p>' + m.desc + '</p>' : '') +
+              '<div class="model-price"><span class="price">' + (m.price || '') + '</span>' + (m.href ? '<a href="' + m.href + '">Buyurtma →</a>' : '') + '</div>' +
+            '</div>' +
+          '</div>';
+        favGrid.appendChild(col);
+      });
+
+      // Sevimlilar sahifasidagi yurak — bosilsa, ro'yxatdan butunlay olib tashlaydi
+      favGrid.querySelectorAll('.model-heart').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          var favs = readFavorites();
+          delete favs[btn.dataset.favName];
+          writeFavorites(favs);
+          var col = btn.closest('[class*="col-"]');
+          if (col) col.remove();
+          if (Object.keys(favs).length === 0 && favEmpty) favEmpty.style.display = 'block';
+        });
+      });
+    }
+  }
 
   // ---------- Mobil market: pastki tab-navigatsiyada joriy sahifani faollashtirish ----------
   var mpTabbar = document.querySelector('.mp-tabbar');

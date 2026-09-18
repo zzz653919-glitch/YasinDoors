@@ -173,7 +173,12 @@ html[data-theme="light"] .navbar-custom {
   border: 1px solid var(--line);
   border-radius: 999px;
   margin: 6px 4px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
 }
+.loc-badge:hover { border-color: var(--brass); color: var(--brass); }
+.loc-badge:hover > span { color: var(--brass); }
 .loc-badge > span { display: flex; flex-direction: column; line-height: 1.25; color: var(--cream); }
 .loc-sub { font-size: 0.72rem; color: var(--muted); font-weight: 400; }
 
@@ -649,6 +654,15 @@ footer > .container > .row > div > p { color: var(--muted); font-size: 0.9rem; }
   transition: color 0.2s ease;
 }
 .fcol a:hover { color: var(--brass); }
+.fcol .info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cream);
+  font-size: 0.92rem;
+  margin-bottom: 10px;
+}
+.fcol .info-row svg { color: var(--brass); flex: none; }
 
 .bottom-line {
   display: flex;
