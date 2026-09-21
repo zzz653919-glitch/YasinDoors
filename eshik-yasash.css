@@ -42,8 +42,9 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible{outline:2px soli
 }
 html[data-theme="light"] .topbar{background:rgba(247,242,230,.92);}
 .topbar .wrap{display:flex; align-items:center; justify-content:space-between; width:100%;}
-.brand{font-family:var(--font-display); font-size:1.3rem; font-weight:600;}
+.brand{font-family:var(--font-display); font-size:1.3rem; font-weight:600; color:var(--cream);}
 .brand span{color:var(--brass);}
+.brand:hover{color:var(--cream);}
 .theme-toggle{
   width:38px; height:38px; border-radius:50%; border:1px solid var(--line); background:transparent;
   color:var(--cream); display:flex; align-items:center; justify-content:center; transition:border-color .2s,color .2s;
@@ -213,6 +214,10 @@ html[data-theme="dark"] .theme-toggle .icon-moon{display:block;}
   padding:12px 14px; font-size:.94rem; font-family:inherit;
 }
 .order-box input:focus{ outline:none; border-color:var(--brass); box-shadow:0 0 0 3px rgba(201,164,76,.18); }
+.order-box input.invalid{ border-color:var(--danger); }
+.order-box input.invalid:focus{ box-shadow:0 0 0 3px rgba(198,95,78,.18); }
+.order-error{ display:none; font-size:.82rem; color:var(--danger); font-weight:600; }
+.order-error.show{ display:block; }
 .order-box .btn-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }
 .order-box .btn-row .btn{ flex:1; justify-content:center; min-width:160px; }
 .order-note{ font-size:.78rem; color:var(--muted-2); }

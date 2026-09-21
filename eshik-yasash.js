@@ -4,10 +4,7 @@
    MA'LUMOTLAR
    ========================================================= */
 var MATERIALS = [
-  { id:'yogoch', name:"Yog'och (massiv)", desc:"Tabiiy naqsh, eng yuqori mustahkamlik", price:2400000 },
-  { id:'mdf',    name:'MDF', desc:"Silliq yuza, keng rang tanlovi", price:1600000 },
-  { id:'metal',  name:'Metall', desc:"Maksimal xavfsizlik, tashqi eshiklar uchun", price:2900000 },
-  { id:'shisha', name:'Shisha aralash', desc:"Zamonaviy, yorug'lik o'tkazadi", price:2100000 }
+  { id:'mdf',    name:'MDF', desc:"Silliq yuza, keng rang tanlovi", price:1600000 }
 ];
 
 var COLORS = [
@@ -323,8 +320,9 @@ function renderFinalStep(){
       '<div class="deposit">Buyurtma uchun zalog (20%): '+formatSom(deposit)+'</div>'+
     '</div>'+
     '<div class="order-box">'+
-      '<div class="field"><label for="custName">Ismingiz</label><input type="text" id="custName" placeholder="Ismingizni kiriting"></div>'+
-      '<div class="field"><label for="custPhone">Telefon raqam</label><input type="tel" id="custPhone" placeholder="+998 90 123 45 67"></div>'+
+      '<div class="field"><label for="custName">Ismingiz *</label><input type="text" id="custName" placeholder="Ismingizni kiriting"></div>'+
+      '<div class="field"><label for="custPhone">Telefon raqam *</label><input type="tel" id="custPhone" placeholder="+998 90 123 45 67"></div>'+
+      '<div class="order-error" id="orderError"></div>'+
       '<div class="btn-row">'+
         '<button type="button" class="btn primary" id="sendTgBtn">'+
           '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M22 3L2.5 10.7c-.7.3-.7 1.3.1 1.5l4.9 1.5 1.9 6.1c.2.7 1.1.9 1.6.3l2.7-3 5 3.7c.6.5 1.5.1 1.7-.6L23.9 4c.2-.8-.6-1.4-1.9-1z"/><path d="M7.5 13.7l10-7.2-8 8.4"/></svg>'+
@@ -339,7 +337,7 @@ function renderFinalStep(){
         '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'+
         "Buyurtma ma'lumotlarini nusxalash"+
       '</button>'+
-      '<div class="order-note">Ism va telefon ixtiyoriy — kiritsangiz, Telegram xabarida avtomatik qo\'shiladi.</div>'+
+      '<div class="order-note">* Ism va telefon raqamingizni kiriting — buyurtma shulardan keyingina yuboriladi.</div>'+
       '<div class="confirm-box" id="confirmBox">'+
         '<div class="tick"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'+
         '<h4>Buyurtma tayyorlandi!</h4>'+
@@ -373,13 +371,86 @@ function buildOrderText(){
   return lines.join('\n');
 }
 
+// ---------- Buyurtmani Google Sheets'ga yozish ----------
+// Code.gs'ning doPost() funksiyasi kutayotgan aniq maydonlar bilan bir xil:
+// type, id, name, phone, model, series, size, color, quantity, total, deposit, address, map_link, page
+function generateOrderId(){
+  return 'YDK' + Date.now().toString(36).toUpperCase();
+}
+
+function sendOrderToSheets(){
+  var url = window.SHEETS_WEBHOOK_URL;
+  if(!url || String(url).indexOf('BU_YERGA') !== -1){
+    console.error('bot-config.js da SHEETS_WEBHOOK_URL sozlanmagan — buyurtma Sheets\'ga yuborilmadi.');
+    return;
+  }
+  var m = findBy(MATERIALS, state.material), c = findBy(COLORS, state.rang),
+      k = findBy(KARONA, state.karona), o = findBy(OYNA, state.oyna),
+      r = findBy(RUCHKA, state.ruchka), q = findBy(QULF, state.qulf), p = findBy(PETLYA, state.petlya);
+  var name = (document.getElementById('custName')||{}).value.trim() || '';
+  var phone = (document.getElementById('custPhone')||{}).value.trim() || '';
+  var total = calcTotal();
+  var deposit = Math.round(total * 0.2);
+
+  var payload = {
+    type: 'order',
+    id: generateOrderId(),
+    name: name,
+    phone: phone,
+    model: 'Maxsus eshik (konstruktor) — ' + m.name,
+    series: 'Karona: ' + k.name + ' · Oyna: ' + o.name + ' · Ruchka: ' + r.name + ' · Qulf: ' + q.name + ' · ' + p.name,
+    size: '',
+    color: c.name,
+    quantity: 1,
+    total: total,
+    deposit: deposit,
+    address: '',
+    map_link: '',
+    page: window.location.pathname
+  };
+
+  return fetch(url, {
+    method: 'POST',
+    mode: 'no-cors', // Google Apps Script javobini o'qimaymiz, faqat yuboramiz
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  }).catch(function(err){
+    console.error('Buyurtmani Sheets\'ga yuborishda xatolik:', err);
+  });
+}
+
 function attachFinalListeners(){
   var sendBtn = document.getElementById('sendTgBtn');
   var printBtn = document.getElementById('printBtn');
   var copyBtn = document.getElementById('copyBtn');
   var confirmBox = document.getElementById('confirmBox');
+  var errorBox = document.getElementById('orderError');
+  var nameInput = document.getElementById('custName');
+  var phoneInput = document.getElementById('custPhone');
+
+  function clearFieldError(el){ el.classList.remove('invalid'); }
+  function setFieldError(el){ el.classList.add('invalid'); }
+  [nameInput, phoneInput].forEach(function(el){
+    el.addEventListener('input', function(){ clearFieldError(el); errorBox.classList.remove('show'); });
+  });
+
+  function validateContact(){
+    var nameVal = nameInput.value.trim();
+    var phoneDigits = phoneInput.value.replace(/\D/g, '');
+    var ok = true;
+    if(!nameVal){ setFieldError(nameInput); ok = false; } else { clearFieldError(nameInput); }
+    if(phoneDigits.length < 7){ setFieldError(phoneInput); ok = false; } else { clearFieldError(phoneInput); }
+    if(!ok){
+      errorBox.textContent = "Buyurtma yuborish uchun ismingiz va telefon raqamingizni to'liq kiriting.";
+      errorBox.classList.add('show');
+      (nameVal ? phoneInput : nameInput).focus();
+    }
+    return ok;
+  }
 
   sendBtn.addEventListener('click', function(){
+    if(!validateContact()) return;
+    sendOrderToSheets();
     var text = buildOrderText();
     var url = 'https://t.me/share/url?url=' + encodeURIComponent('YasinDoors') + '&text=' + encodeURIComponent(text);
     window.open(url, '_blank', 'noopener');
