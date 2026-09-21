@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model — YasinDoors</title>
+<meta name="theme-color" content="#17130f">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="savat.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <a class="brand" href="index.html">Yasin<span>Doors</span></a>
+    <div class="top-actions">
+      <a class="top-link" href="katalog.html">Katalog</a>
+      <a class="top-link" href="savat.html" data-cart-link>
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.4 12.4a2 2 0 0 0 2 1.6h7.2a2 2 0 0 0 2-1.6L21 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></svg>
+        <span class="lbl-long">Savat</span><span class="yd-cart-badge" data-cart-badge hidden>0</span>
+      </a>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Rangni almashtirish">
+        <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8l1.8-1.8M18 6l1.8-1.8"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap" id="app"></main>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span>Savatga qo'shildi</span>
+  <a href="savat.html">Savatga o'tish →</a>
+</div>
+
+<script src="models-data.js"></script>
+<script src="savat.js"></script>
+<script src="model.js"></script>
+</body>
+</html>
