@@ -216,6 +216,13 @@ html[data-theme="dark"] .theme-toggle .icon-moon{display:block;}
 .order-box input:focus{ outline:none; border-color:var(--brass); box-shadow:0 0 0 3px rgba(201,164,76,.18); }
 .order-box input.invalid{ border-color:var(--danger); }
 .order-box input.invalid:focus{ box-shadow:0 0 0 3px rgba(198,95,78,.18); }
+.order-box .phone-input-group{ display:flex; }
+.order-box .phone-input-group .phone-prefix{
+  display:flex; align-items:center; background:var(--surface-3); border:1px solid var(--line); border-right:none;
+  color:var(--cream); font-weight:600; font-family:var(--font-mono); font-size:.94rem;
+  padding:0 12px; border-radius:var(--radius-s) 0 0 var(--radius-s);
+}
+.order-box .phone-input-group input{ border-radius:0 var(--radius-s) var(--radius-s) 0; }
 .order-error{ display:none; font-size:.82rem; color:var(--danger); font-weight:600; }
 .order-error.show{ display:block; }
 .order-box .btn-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:4px; }

@@ -320,8 +320,14 @@ function renderFinalStep(){
       '<div class="deposit">Buyurtma uchun zalog (20%): '+formatSom(deposit)+'</div>'+
     '</div>'+
     '<div class="order-box">'+
-      '<div class="field"><label for="custName">Ismingiz *</label><input type="text" id="custName" placeholder="Ismingizni kiriting"></div>'+
-      '<div class="field"><label for="custPhone">Telefon raqam *</label><input type="tel" id="custPhone" placeholder="+998 90 123 45 67"></div>'+
+      '<div class="field"><label for="custName">Ism va familiyangiz *</label><input type="text" id="custName" placeholder="Masalan: Aziz Karimov"></div>'+
+      '<div class="field"><label for="custPhone">Telefon raqam *</label>'+
+        '<div class="phone-input-group">'+
+          '<span class="phone-prefix">+998</span>'+
+          '<input type="tel" id="custPhone" placeholder="90 123 45 67" inputmode="numeric" maxlength="12">'+
+        '</div>'+
+      '</div>'+
+      '<div class="field"><label for="custAddress">Manzil *</label><input type="text" id="custAddress" placeholder="Viloyat, tuman, mahalla, ko\'cha, uy raqami"></div>'+
       '<div class="order-error" id="orderError"></div>'+
       '<div class="btn-row">'+
         '<button type="button" class="btn primary" id="sendTgBtn">'+
@@ -337,7 +343,7 @@ function renderFinalStep(){
         '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'+
         "Buyurtma ma'lumotlarini nusxalash"+
       '</button>'+
-      '<div class="order-note">* Ism va telefon raqamingizni kiriting — buyurtma shulardan keyingina yuboriladi.</div>'+
+      '<div class="order-note">* Ism, telefon va manzilingizni kiriting — buyurtma shulardan keyingina yuboriladi.</div>'+
       '<div class="confirm-box" id="confirmBox">'+
         '<div class="tick"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'+
         '<h4>Buyurtma tayyorlandi!</h4>'+
@@ -347,18 +353,25 @@ function renderFinalStep(){
   '</div>';
 }
 
+function getFullPhone(el){
+  var digits = el ? el.value.replace(/\D/g, '') : '';
+  return digits ? ('+998' + digits) : '';
+}
+
 function buildOrderText(){
   var m = findBy(MATERIALS, state.material), c = findBy(COLORS, state.rang),
       k = findBy(KARONA, state.karona), o = findBy(OYNA, state.oyna),
       r = findBy(RUCHKA, state.ruchka), q = findBy(QULF, state.qulf), p = findBy(PETLYA, state.petlya);
   var name = (document.getElementById('custName')||{}).value || '';
-  var phone = (document.getElementById('custPhone')||{}).value || '';
+  var phone = getFullPhone(document.getElementById('custPhone'));
+  var address = (document.getElementById('custAddress')||{}).value || '';
   var total = calcTotal();
   var deposit = Math.round(total*0.2);
 
   var lines = ['🚪 Yangi eshik konstruktori buyurtmasi — YasinDoors', ''];
   if(name) lines.push('👤 Mijoz: ' + name);
   if(phone) lines.push('📞 Tel: ' + phone);
+  if(address) lines.push('📍 Manzil: ' + address);
   lines.push('🧱 Material: ' + m.name);
   lines.push('🎨 Rang: ' + c.name);
   lines.push('🖼 Karona: ' + k.name);
@@ -388,7 +401,8 @@ function sendOrderToSheets(){
       k = findBy(KARONA, state.karona), o = findBy(OYNA, state.oyna),
       r = findBy(RUCHKA, state.ruchka), q = findBy(QULF, state.qulf), p = findBy(PETLYA, state.petlya);
   var name = (document.getElementById('custName')||{}).value.trim() || '';
-  var phone = (document.getElementById('custPhone')||{}).value.trim() || '';
+  var phone = getFullPhone(document.getElementById('custPhone'));
+  var address = (document.getElementById('custAddress')||{}).value.trim() || '';
   var total = calcTotal();
   var deposit = Math.round(total * 0.2);
 
@@ -404,7 +418,7 @@ function sendOrderToSheets(){
     quantity: 1,
     total: total,
     deposit: deposit,
-    address: '',
+    address: address,
     map_link: '',
     page: window.location.pathname
   };
@@ -427,23 +441,42 @@ function attachFinalListeners(){
   var errorBox = document.getElementById('orderError');
   var nameInput = document.getElementById('custName');
   var phoneInput = document.getElementById('custPhone');
+  var addressInput = document.getElementById('custAddress');
 
   function clearFieldError(el){ el.classList.remove('invalid'); }
   function setFieldError(el){ el.classList.add('invalid'); }
-  [nameInput, phoneInput].forEach(function(el){
+  [nameInput, phoneInput, addressInput].forEach(function(el){
     el.addEventListener('input', function(){ clearFieldError(el); errorBox.classList.remove('show'); });
+  });
+
+  // Telefon: faqat 9 ta raqam kiritiladi, avtomatik bo'shliqlar bilan formatlanadi (+998 alohida ko'rsatiladi)
+  phoneInput.addEventListener('input', function(){
+    var digits = phoneInput.value.replace(/\D/g, '').slice(0, 9);
+    var parts = [];
+    if(digits.length > 0) parts.push(digits.slice(0, 2));
+    if(digits.length > 2) parts.push(digits.slice(2, 5));
+    if(digits.length > 5) parts.push(digits.slice(5, 7));
+    if(digits.length > 7) parts.push(digits.slice(7, 9));
+    phoneInput.value = parts.join(' ');
+  });
+  phoneInput.addEventListener('keydown', function(e){
+    var allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+    if(allowedKeys.indexOf(e.key) !== -1 || e.ctrlKey || e.metaKey) return;
+    if(!/^[0-9]$/.test(e.key)) e.preventDefault();
   });
 
   function validateContact(){
     var nameVal = nameInput.value.trim();
     var phoneDigits = phoneInput.value.replace(/\D/g, '');
+    var addressVal = addressInput.value.trim();
     var ok = true;
     if(!nameVal){ setFieldError(nameInput); ok = false; } else { clearFieldError(nameInput); }
-    if(phoneDigits.length < 7){ setFieldError(phoneInput); ok = false; } else { clearFieldError(phoneInput); }
+    if(phoneDigits.length !== 9){ setFieldError(phoneInput); ok = false; } else { clearFieldError(phoneInput); }
+    if(!addressVal){ setFieldError(addressInput); ok = false; } else { clearFieldError(addressInput); }
     if(!ok){
-      errorBox.textContent = "Buyurtma yuborish uchun ismingiz va telefon raqamingizni to'liq kiriting.";
+      errorBox.textContent = "Buyurtma yuborish uchun ism, telefon (9 ta raqam) va manzilni to'liq kiriting.";
       errorBox.classList.add('show');
-      (nameVal ? phoneInput : nameInput).focus();
+      (!nameVal ? nameInput : (phoneDigits.length !== 9 ? phoneInput : addressInput)).focus();
     }
     return ok;
   }
