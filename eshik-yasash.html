@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eshik konstruktori — YasinDoors</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" rel="stylesheet">
 <link rel="stylesheet" href="eshik-yasash.css">
 </head>
 <body>
@@ -25,7 +26,7 @@
   <div class="wrap">
     <span class="eyebrow">O'ZINGIZGA MOS ESHIKNI LOYIHALANG</span>
     <h1>O'z <em>eshigingizni</em><br>bosqichma-bosqich yasang</h1>
-    <p class="lead">Material, rang, karona, oyna va furnituradan tortib — hammasini o'zingiz tanlang. Har bir tanlovingiz jonli tarzda ko'rinib turadi.</p>
+    <p class="lead">Rang, karona, oyna va furnituradan tortib — hammasini o'zingiz tanlang. Har bir tanlovingiz jonli tarzda ko'rinib turadi.</p>
 
     <div class="hero-doors" aria-hidden="true">
       <svg viewBox="0 0 60 140"><rect x="2" y="2" width="56" height="136" rx="2" fill="#7A4A20" stroke="rgba(0,0,0,.3)"/><rect x="10" y="12" width="40" height="50" fill="#63390f"/><rect x="10" y="70" width="40" height="58" fill="#63390f"/><circle cx="46" cy="72" r="2.4" fill="#c9a44c"/></svg>
@@ -50,8 +51,8 @@
     <div class="progress-head">
       <div class="progress-top">
         <div>
-          <span class="step-label" id="stepLabel">QADAM 1 / 6</span>
-          <h2 id="stepTitle">Eshik turi va materiali</h2>
+          <span class="step-label" id="stepLabel">QADAM 1 / 5</span>
+          <h2 id="stepTitle">Rang va tekstura</h2>
         </div>
       </div>
       <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
@@ -103,6 +104,34 @@
   </div>
 </div>
 
+<!-- MANZILNI XARITADAN TANLASH OYNASI -->
+<div class="map-modal" id="mapModal" role="dialog" aria-modal="true" aria-labelledby="mapModalTitle" aria-hidden="true">
+  <div class="map-modal-card">
+    <div class="map-modal-head">
+      <h3 id="mapModalTitle">Manzilni xaritadan tanlang</h3>
+      <button type="button" class="map-close" id="mapCloseBtn" aria-label="Yopish">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="map-search">
+      <input type="text" id="mapSearchInput" placeholder="Manzilni qidiring: masalan, Jizzax, Sharof Rashidov ko'chasi" aria-label="Manzilni qidirish">
+      <button type="button" class="btn" id="mapSearchBtn">Qidirish</button>
+      <button type="button" class="btn" id="mapLocateBtn">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg>
+        Mening joylashuvim
+      </button>
+    </div>
+    <div id="pickerMap"></div>
+    <div class="map-status" id="mapStatus"></div>
+    <div class="map-picked" id="mapPicked"></div>
+    <div class="map-modal-foot">
+      <button type="button" class="btn" id="mapCancelBtn">Bekor qilish</button>
+      <button type="button" class="btn primary" id="mapConfirmBtn" disabled>Shu manzilni tanlash</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="bot-config.js"></script>
 <script src="eshik-yasash.js"></script>
 </body>

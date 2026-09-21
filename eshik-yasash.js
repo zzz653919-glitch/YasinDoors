@@ -3,10 +3,6 @@
 /* =========================================================
    MA'LUMOTLAR
    ========================================================= */
-var MATERIALS = [
-  { id:'mdf',    name:'MDF', desc:"Silliq yuza, keng rang tanlovi", price:1600000 }
-];
-
 var COLORS = [
   { id:'yongoq', name:"Yong'oq", hex:'#7A4A20', price:0 },
   { id:'eman',   name:'Eman',    hex:'#A4652C', price:60000 },
@@ -46,11 +42,11 @@ var PETLYA = [
   { id:'4', name:'4 ta petlya (og\'ir eshik)', price:60000 }
 ];
 
-var BASE_PRICE = 900000;
+// Boshlang'ich narx = avvalgi 900 000 + MDF materiali 1 600 000 (material tanlovi olib tashlangani uchun jami narx o'zgarmasligi uchun birlashtirildi)
+var BASE_PRICE = 2500000;
 
-var STEPS = ['material','rang','karona','oyna','furnitura','xulosa'];
+var STEPS = ['rang','karona','oyna','furnitura','xulosa'];
 var STEP_TITLES = {
-  material:'Eshik turi va materiali',
   rang:'Rang va tekstura',
   karona:'Karona va obnalichka',
   oyna:'Oyna va naqsh',
@@ -59,7 +55,7 @@ var STEP_TITLES = {
 };
 
 var state = {
-  material:'mdf', rang:'yongoq', karona:'klassik', oyna:'tekis',
+  rang:'yongoq', karona:'klassik', oyna:'tekis',
   ruchka:'klassik', qulf:'oddiy', petlya:'3',
   step:0
 };
@@ -71,14 +67,13 @@ function findBy(arr,id){ for(var i=0;i<arr.length;i++){ if(arr[i].id===id) retur
 function formatSom(n){ return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ') + " so'm"; }
 
 function calcTotal(){
-  var m = findBy(MATERIALS, state.material);
   var c = findBy(COLORS, state.rang);
   var k = findBy(KARONA, state.karona);
   var o = findBy(OYNA, state.oyna);
   var r = findBy(RUCHKA, state.ruchka);
   var q = findBy(QULF, state.qulf);
   var p = findBy(PETLYA, state.petlya);
-  return BASE_PRICE + m.price + c.price + k.price + o.price + r.price + q.price + p.price;
+  return BASE_PRICE + c.price + k.price + o.price + r.price + q.price + p.price;
 }
 
 /* =========================================================
@@ -86,7 +81,6 @@ function calcTotal(){
    ========================================================= */
 function renderDoor(){
   var c = findBy(COLORS, state.rang);
-  var m = findBy(MATERIALS, state.material);
   var svg = document.getElementById('doorSvg');
   var body = document.getElementById('doorBody');
   var dark = shade(c.hex, -22);
@@ -94,9 +88,6 @@ function renderDoor(){
 
   body.setAttribute('fill', c.hex);
   body.setAttribute('stroke', 'rgba(0,0,0,.3)');
-
-  // metal material -> slightly different sheen via stroke
-  if(m.id === 'metal'){ body.setAttribute('stroke', 'rgba(0,0,0,.5)'); }
 
   // FRAME (karona)
   var frame = document.getElementById('frameLayer');
@@ -176,16 +167,6 @@ function renderDoor(){
   if(state.oyna === 'naqsh' && !hasWindow){
     // n/a — handled above when window
   }
-  if(state.material === 'yogoch'){
-    // subtle wood grain lines
-    for(var g=0; g<4; g++){
-      var gl = document.createElementNS('http://www.w3.org/2000/svg','path');
-      var yy = 30 + g*80;
-      gl.setAttribute('d', 'M40 '+yy+' Q100 '+(yy+10)+' 160 '+yy);
-      gl.setAttribute('stroke', 'rgba(0,0,0,.12)'); gl.setAttribute('stroke-width','1'); gl.setAttribute('fill','none');
-      naqsh.appendChild(gl);
-    }
-  }
 
   // HANDLE
   var handle = document.getElementById('handleLayer');
@@ -220,10 +201,9 @@ function shade(hex, percent){
    SUMMARY / PRICE
    ========================================================= */
 function renderSummary(){
-  var m = findBy(MATERIALS, state.material), c = findBy(COLORS, state.rang),
+  var c = findBy(COLORS, state.rang),
       k = findBy(KARONA, state.karona), o = findBy(OYNA, state.oyna);
   var rows = [
-    ['Material', m.name],
     ['Rang', c.name],
     ['Karona', k.name],
     ['Oyna/naqsh', o.name]
@@ -260,11 +240,7 @@ function renderStepContent(){
   var panel = document.getElementById('panelContent');
   var html = '';
 
-  if(key === 'material'){
-    html += '<p class="step-intro">Eshikning asosiy jismi qanday materialdan bo\'lishini tanlang — bu mustahkamlik va boshlang\'ich narxni belgilaydi.</p>';
-    html += '<div class="option-grid">' + MATERIALS.map(function(m){ return optionCard(m,'material',false); }).join('') + '</div>';
-  }
-  else if(key === 'rang'){
+  if(key === 'rang'){
     html += '<p class="step-intro">Eshik tabaqasi va karonasi uchun rang va tuslashni tanlang.</p>';
     html += '<div class="option-grid">' + COLORS.map(function(c){ return optionCard(c,'rang',true); }).join('') + '</div>';
   }
@@ -292,14 +268,13 @@ function renderStepContent(){
 }
 
 function renderFinalStep(){
-  var m = findBy(MATERIALS, state.material), c = findBy(COLORS, state.rang),
+  var c = findBy(COLORS, state.rang),
       k = findBy(KARONA, state.karona), o = findBy(OYNA, state.oyna),
       r = findBy(RUCHKA, state.ruchka), q = findBy(QULF, state.qulf), p = findBy(PETLYA, state.petlya);
   var total = calcTotal();
   var deposit = Math.round(total * 0.2);
 
   var rowsHtml = [
-    ['Material', m.name, m.price],
     ['Rang', c.name, c.price],
     ['Karona', k.name, k.price],
     ['Oyna/naqsh', o.name, o.price],
@@ -320,14 +295,23 @@ function renderFinalStep(){
       '<div class="deposit">Buyurtma uchun zalog (20%): '+formatSom(deposit)+'</div>'+
     '</div>'+
     '<div class="order-box">'+
-      '<div class="field"><label for="custName">Ism va familiyangiz *</label><input type="text" id="custName" placeholder="Masalan: Aziz Karimov"></div>'+
+      '<div class="field"><label for="custName">Ism va familiyangiz *</label><input type="text" id="custName" placeholder="Masalan: Aziz Karimov" value="'+esc(contact.name)+'"></div>'+
       '<div class="field"><label for="custPhone">Telefon raqam *</label>'+
         '<div class="phone-input-group">'+
           '<span class="phone-prefix">+998</span>'+
-          '<input type="tel" id="custPhone" placeholder="90 123 45 67" inputmode="numeric" maxlength="12">'+
+          '<input type="tel" id="custPhone" placeholder="90 123 45 67" inputmode="numeric" maxlength="12" value="'+esc(contact.phone)+'">'+
         '</div>'+
       '</div>'+
-      '<div class="field"><label for="custAddress">Manzil *</label><input type="text" id="custAddress" placeholder="Viloyat, tuman, mahalla, ko\'cha, uy raqami"></div>'+
+      '<div class="field"><label for="custAddress">Manzil *</label>'+
+        '<div class="address-group">'+
+          '<input type="text" id="custAddress" placeholder="Viloyat, tuman, mahalla, ko\'cha, uy raqami" value="'+esc(contact.address)+'">'+
+          '<button type="button" class="btn map-pick-btn" id="pickMapBtn">'+
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>'+
+            'Xaritadan tanlash'+
+          '</button>'+
+        '</div>'+
+        '<div class="pin-chip" id="pinChip"></div>'+
+      '</div>'+
       '<div class="order-error" id="orderError"></div>'+
       '<div class="btn-row">'+
         '<button type="button" class="btn primary" id="sendTgBtn">'+
@@ -359,7 +343,7 @@ function getFullPhone(el){
 }
 
 function buildOrderText(){
-  var m = findBy(MATERIALS, state.material), c = findBy(COLORS, state.rang),
+  var c = findBy(COLORS, state.rang),
       k = findBy(KARONA, state.karona), o = findBy(OYNA, state.oyna),
       r = findBy(RUCHKA, state.ruchka), q = findBy(QULF, state.qulf), p = findBy(PETLYA, state.petlya);
   var name = (document.getElementById('custName')||{}).value || '';
@@ -372,7 +356,7 @@ function buildOrderText(){
   if(name) lines.push('👤 Mijoz: ' + name);
   if(phone) lines.push('📞 Tel: ' + phone);
   if(address) lines.push('📍 Manzil: ' + address);
-  lines.push('🧱 Material: ' + m.name);
+  if(getMapLink()) lines.push('🗺 Xarita: ' + getMapLink());
   lines.push('🎨 Rang: ' + c.name);
   lines.push('🖼 Karona: ' + k.name);
   lines.push('🪟 Oyna/naqsh: ' + o.name);
@@ -397,7 +381,7 @@ function sendOrderToSheets(){
     console.error('bot-config.js da SHEETS_WEBHOOK_URL sozlanmagan — buyurtma Sheets\'ga yuborilmadi.');
     return;
   }
-  var m = findBy(MATERIALS, state.material), c = findBy(COLORS, state.rang),
+  var c = findBy(COLORS, state.rang),
       k = findBy(KARONA, state.karona), o = findBy(OYNA, state.oyna),
       r = findBy(RUCHKA, state.ruchka), q = findBy(QULF, state.qulf), p = findBy(PETLYA, state.petlya);
   var name = (document.getElementById('custName')||{}).value.trim() || '';
@@ -411,7 +395,7 @@ function sendOrderToSheets(){
     id: generateOrderId(),
     name: name,
     phone: phone,
-    model: 'Maxsus eshik (konstruktor) — ' + m.name,
+    model: 'Maxsus eshik (konstruktor)',
     series: 'Karona: ' + k.name + ' · Oyna: ' + o.name + ' · Ruchka: ' + r.name + ' · Qulf: ' + q.name + ' · ' + p.name,
     size: '',
     color: c.name,
@@ -419,7 +403,7 @@ function sendOrderToSheets(){
     total: total,
     deposit: deposit,
     address: address,
-    map_link: '',
+    map_link: getMapLink(),
     page: window.location.pathname
   };
 
@@ -430,6 +414,266 @@ function sendOrderToSheets(){
     body: JSON.stringify(payload)
   }).catch(function(err){
     console.error('Buyurtmani Sheets\'ga yuborishda xatolik:', err);
+  });
+}
+
+/* =========================================================
+   MANZILNI XARITADAN TANLASH (Leaflet + OpenStreetMap)
+   buyurtma.html'dagi xarita bilan bir xil hududlar va geokodlash xizmati
+   ========================================================= */
+var contact = { name:'', phone:'', address:'', lat:null, lng:null };
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getMapLink(){
+  if(contact.lat == null || contact.lng == null) return '';
+  return 'https://www.google.com/maps?q=' + contact.lat.toFixed(6) + ',' + contact.lng.toFixed(6);
+}
+
+// Yetkazib berish mumkin bo'lgan viloyatlar (taxminiy poligonlar — buyurtma.html bilan bir xil)
+var ALLOWED_REGIONS = {
+  "Toshkent viloyati": [[41.85,69.95],[41.75,70.35],[41.35,70.55],[41.05,70.35],[40.75,70.05],[40.85,69.55],[41.05,69.15],[41.35,68.75],[41.65,68.85],[41.85,69.35],[41.85,69.95]],
+  "Sirdaryo viloyati": [[40.85,68.55],[40.85,69.15],[40.55,69.35],[40.15,69.15],[40.05,68.75],[40.25,68.35],[40.65,68.25],[40.85,68.55]],
+  "Samarqand viloyati": [[40.15,66.55],[40.05,67.55],[39.75,67.85],[39.35,67.65],[39.05,67.15],[39.15,66.35],[39.55,65.95],[39.95,66.05],[40.15,66.55]],
+  "Navoiy viloyati": [[42.05,65.95],[41.75,66.55],[40.85,66.75],[40.15,66.45],[39.85,65.55],[39.55,64.25],[39.85,62.75],[40.55,62.35],[41.55,63.05],[42.05,64.25],[42.05,65.95]],
+  "Qashqadaryo viloyati": [[39.15,65.15],[39.05,66.35],[38.55,66.95],[37.95,66.75],[37.85,65.95],[38.15,65.05],[38.65,64.55],[39.05,64.75],[39.15,65.15]],
+  "Jizzax viloyati": [[40.55,67.55],[40.45,68.35],[40.05,68.65],[39.55,68.35],[39.35,67.85],[39.55,67.15],[40.05,66.95],[40.35,67.15],[40.55,67.55]]
+};
+
+function pointInPolygon(lat, lng, polygon){
+  var inside = false;
+  for(var i = 0, j = polygon.length - 1; i < polygon.length; j = i++){
+    var yi = polygon[i][0], xi = polygon[i][1], yj = polygon[j][0], xj = polygon[j][1];
+    if(((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+function findAllowedRegion(lat, lng){
+  for(var name in ALLOWED_REGIONS){ if(pointInPolygon(lat, lng, ALLOWED_REGIONS[name])) return name; }
+  return null;
+}
+
+var NOMINATIM = 'https://nominatim.openstreetmap.org';
+function nominatimReverse(lat, lng){
+  return fetch(NOMINATIM + '/reverse?format=jsonv2&addressdetails=1&accept-language=uz,ru&lat=' + lat + '&lon=' + lng,
+    { headers:{ 'Accept':'application/json' } }).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+}
+function nominatimSearch(q){
+  return fetch(NOMINATIM + '/search?format=jsonv2&limit=1&countrycodes=uz&accept-language=uz,ru&q=' + encodeURIComponent(q),
+    { headers:{ 'Accept':'application/json' } }).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+}
+
+var picker = { map:null, marker:null, lat:null, lng:null, region:null, text:'', seq:0, lastFocus:null };
+
+function pickerEl(id){ return document.getElementById(id); }
+
+function setPickerStatus(kind, html){
+  var el = pickerEl('mapStatus');
+  el.className = 'map-status' + (kind ? ' show ' + kind : '');
+  el.innerHTML = html || '';
+}
+
+function renderPicked(){
+  var box = pickerEl('mapPicked');
+  var btn = pickerEl('mapConfirmBtn');
+  if(picker.lat == null || !picker.region){
+    box.innerHTML = ''; box.classList.remove('show'); btn.disabled = true; return;
+  }
+  box.classList.add('show');
+  box.innerHTML = '<b>Tanlangan manzil:</b> ' + esc(picker.text || picker.region) +
+    '<span class="hint">Uy / xonadon raqamini tasdiqlagandan so\'ng manzil maydoniga qo\'shishingiz mumkin.</span>';
+  btn.disabled = false;
+}
+
+function placeMarker(lat, lng, ok){
+  if(picker.marker) picker.map.removeLayer(picker.marker);
+  picker.marker = L.circleMarker([lat, lng], {
+    radius:9, weight:2,
+    color: ok ? '#7a4a20' : '#7a2020',
+    fillColor: ok ? '#c9a44c' : '#e06060',
+    fillOpacity:1
+  }).addTo(picker.map);
+}
+
+function setPickerPoint(lat, lng){
+  picker.lat = lat; picker.lng = lng;
+  var region = findAllowedRegion(lat, lng);
+  picker.region = region;
+  placeMarker(lat, lng, !!region);
+
+  if(!region){
+    picker.text = '';
+    setPickerStatus('fail', '✕ Bu joyga yetkazib bera olmaymiz. Hozircha faqat Toshkent, Sirdaryo, Samarqand, Navoiy, Qashqadaryo va Jizzax viloyatlariga yetkazib beramiz.');
+    renderPicked();
+    return;
+  }
+
+  setPickerStatus('ok', '✓ <b>' + region + '</b> — bu hududga yetkazib bera olamiz.');
+  picker.text = region;
+  renderPicked();
+
+  var mySeq = ++picker.seq;
+  nominatimReverse(lat, lng).then(function(data){
+    if(mySeq !== picker.seq) return; // undan keyinroq boshqa nuqta bosilgan
+    var a = data && data.address;
+    if(!a) return;
+    var mahalla = a.suburb || a.neighbourhood || a.quarter || a.city_district || a.residential || '';
+    var street = a.road || a.pedestrian || a.footway || '';
+    var parts = [];
+    if(a.house_number) parts.push(a.house_number + '-uy');
+    if(street) parts.push(street);
+    if(mahalla) parts.push(mahalla);
+    parts.push(region);
+    picker.text = parts.join(', ');
+    renderPicked();
+  }).catch(function(err){
+    console.error('Teskari geokodlash xatosi:', err);
+  });
+}
+
+function initPickerMap(){
+  if(picker.map) return true;
+  if(typeof L === 'undefined'){
+    setPickerStatus('fail', '✕ Xarita yuklanmadi. Internet aloqasini tekshirib, sahifani yangilang yoki manzilni qo\'lda kiriting.');
+    return false;
+  }
+  picker.map = L.map(pickerEl('pickerMap'), { center:[40.127041, 67.905874], zoom:7, minZoom:5, maxZoom:19 });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom:19
+  }).addTo(picker.map);
+
+  Object.keys(ALLOWED_REGIONS).forEach(function(name){
+    L.polygon(ALLOWED_REGIONS[name], { fillColor:'#c9a44c', fillOpacity:.18, color:'#c9a44c', weight:1.5, opacity:.9 })
+      .addTo(picker.map).bindTooltip(name)
+      .on('click', function(e){ setPickerPoint(e.latlng.lat, e.latlng.lng); });
+  });
+  picker.map.on('click', function(e){ setPickerPoint(e.latlng.lat, e.latlng.lng); });
+  return true;
+}
+
+function openMapModal(){
+  var modal = pickerEl('mapModal');
+  picker.lastFocus = document.activeElement;
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('map-modal-lock');
+
+  var ready = initPickerMap();
+  setPickerStatus('', '');
+  pickerEl('mapPicked').classList.remove('show');
+  pickerEl('mapConfirmBtn').disabled = true;
+  picker.lat = null; picker.lng = null; picker.region = null; picker.text = '';
+  if(picker.marker && picker.map){ picker.map.removeLayer(picker.marker); picker.marker = null; }
+
+  var typed = (document.getElementById('custAddress') || {}).value || '';
+  pickerEl('mapSearchInput').value = contact.lat == null ? typed.trim() : '';
+
+  if(ready){
+    setTimeout(function(){
+      picker.map.invalidateSize();
+      if(contact.lat != null){
+        picker.map.setView([contact.lat, contact.lng], 16);
+        setPickerPoint(contact.lat, contact.lng); // avval tanlangan nuqtani ko'rsatish
+      } else {
+        picker.map.setView([40.127041, 67.905874], 7);
+        setPickerStatus('', '');
+        var st = pickerEl('mapStatus');
+        st.className = 'map-status show info';
+        st.innerHTML = 'Xaritani kattalashtirib, eshik o\'rnatiladigan joyni bosing.';
+      }
+    }, 60);
+  }
+  pickerEl('mapCloseBtn').focus();
+}
+
+function closeMapModal(){
+  var modal = pickerEl('mapModal');
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('map-modal-lock');
+  if(picker.lastFocus && picker.lastFocus.focus) picker.lastFocus.focus();
+}
+
+function renderPinChip(){
+  var chip = document.getElementById('pinChip');
+  if(!chip) return;
+  if(contact.lat == null){ chip.classList.remove('show'); chip.innerHTML = ''; return; }
+  chip.classList.add('show');
+  chip.innerHTML = '<span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Xaritada belgilandi</span>' +
+    '<a href="' + getMapLink() + '" target="_blank" rel="noopener">Ko\'rish</a>' +
+    '<button type="button" id="pinClearBtn">Olib tashlash</button>';
+  document.getElementById('pinClearBtn').addEventListener('click', function(){
+    contact.lat = null; contact.lng = null; renderPinChip();
+  });
+}
+
+function confirmMapPick(){
+  if(picker.lat == null || !picker.region) return;
+  contact.lat = picker.lat; contact.lng = picker.lng;
+  contact.address = picker.text || picker.region;
+  var input = document.getElementById('custAddress');
+  if(input){ input.value = contact.address; input.classList.remove('invalid'); input.focus(); }
+  var err = document.getElementById('orderError');
+  if(err) err.classList.remove('show');
+  renderPinChip();
+  closeMapModal();
+}
+
+function attachMapPicker(){
+  // Modal tugmalari faqat bir marta bog'lanadi
+  if(attachMapPicker.done) return;
+  attachMapPicker.done = true;
+
+  pickerEl('mapCloseBtn').addEventListener('click', closeMapModal);
+  pickerEl('mapCancelBtn').addEventListener('click', closeMapModal);
+  pickerEl('mapConfirmBtn').addEventListener('click', confirmMapPick);
+  pickerEl('mapModal').addEventListener('click', function(e){ if(e.target === this) closeMapModal(); });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && pickerEl('mapModal').classList.contains('open')) closeMapModal();
+  });
+
+  function doSearch(){
+    var q = pickerEl('mapSearchInput').value.trim();
+    if(!q || !picker.map) return;
+    var btn = pickerEl('mapSearchBtn');
+    btn.disabled = true; btn.textContent = 'Qidirilmoqda...';
+    nominatimSearch(q).then(function(res){
+      btn.disabled = false; btn.textContent = 'Qidirish';
+      if(!res || !res.length){
+        setPickerStatus('fail', '✕ Manzil topilmadi. Boshqacha yozib ko\'ring yoki xaritadan bosib belgilang.');
+        return;
+      }
+      var lat = parseFloat(res[0].lat), lng = parseFloat(res[0].lon);
+      picker.map.flyTo([lat, lng], 17, { duration:.4 });
+      setPickerPoint(lat, lng);
+    }).catch(function(err){
+      btn.disabled = false; btn.textContent = 'Qidirish';
+      setPickerStatus('fail', '✕ Qidirishda xatolik. Birozdan so\'ng qayta urinib ko\'ring.');
+      console.error('Geokodlash xatosi:', err);
+    });
+  }
+  pickerEl('mapSearchBtn').addEventListener('click', doSearch);
+  pickerEl('mapSearchInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); doSearch(); }
+  });
+
+  pickerEl('mapLocateBtn').addEventListener('click', function(){
+    if(!navigator.geolocation || !picker.map){
+      setPickerStatus('fail', '✕ Brauzeringiz joylashuvni aniqlashni qo\'llamaydi. Xaritadan qo\'lda belgilang.');
+      return;
+    }
+    var btn = pickerEl('mapLocateBtn');
+    btn.disabled = true;
+    navigator.geolocation.getCurrentPosition(function(pos){
+      btn.disabled = false;
+      picker.map.flyTo([pos.coords.latitude, pos.coords.longitude], 17, { duration:.4 });
+      setPickerPoint(pos.coords.latitude, pos.coords.longitude);
+    }, function(){
+      btn.disabled = false;
+      setPickerStatus('fail', '✕ Joylashuvni aniqlab bo\'lmadi. Brauzerda ruxsat berilganini tekshiring yoki xaritadan qo\'lda belgilang.');
+    }, { enableHighAccuracy:true, timeout:10000 });
   });
 }
 
@@ -449,6 +693,15 @@ function attachFinalListeners(){
     el.addEventListener('input', function(){ clearFieldError(el); errorBox.classList.remove('show'); });
   });
 
+  // Oldingi/keyingi bosqichga o'tganda kiritilgan ma'lumotlar yo'qolmasligi uchun saqlab boriladi
+  nameInput.addEventListener('input', function(){ contact.name = nameInput.value; });
+  addressInput.addEventListener('input', function(){ contact.address = addressInput.value; });
+
+  // "Xaritadan" tugmasi — xarita oynasini ochadi
+  attachMapPicker();
+  document.getElementById('pickMapBtn').addEventListener('click', openMapModal);
+  renderPinChip();
+
   // Telefon: faqat 9 ta raqam kiritiladi, avtomatik bo'shliqlar bilan formatlanadi (+998 alohida ko'rsatiladi)
   phoneInput.addEventListener('input', function(){
     var digits = phoneInput.value.replace(/\D/g, '').slice(0, 9);
@@ -458,6 +711,7 @@ function attachFinalListeners(){
     if(digits.length > 5) parts.push(digits.slice(5, 7));
     if(digits.length > 7) parts.push(digits.slice(7, 9));
     phoneInput.value = parts.join(' ');
+    contact.phone = phoneInput.value;
   });
   phoneInput.addEventListener('keydown', function(e){
     var allowedKeys = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
