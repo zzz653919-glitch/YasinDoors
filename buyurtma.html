@@ -193,7 +193,6 @@
     .mobile-order-bar .mob-total-val{ font-family:'JetBrains Mono',monospace; color:var(--brass); font-size:1.02rem; }
     .mobile-order-bar button{ flex-shrink:0; padding:12px 20px; font-size:0.86rem; }
     body{ padding-bottom:74px; }
-    .float-contact{ bottom:calc(86px + env(safe-area-inset-bottom)); }
   }
 </style>
 </head>
@@ -404,11 +403,6 @@
         <span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:4px; color:var(--brass);"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span> Buyurtmani rasmiylashtirish uchun mutaxassisimiz zalog to'lovi bo'yicha siz bilan bog'lanadi.
       </p>
       <br>
-      <a href="#" id="telegramTrackBtn" class="btn-brass" target="_blank" rel="noopener" style="display:none; margin-bottom:12px; align-items:center; gap:8px;">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 3L2.5 10.7c-.7.3-.7 1.3.1 1.5l4.9 1.5 1.9 6.1c.2.7 1.1.9 1.6.3l2.7-3 5 3.7c.6.5 1.5.1 1.7-.6L23.9 4c.2-.8-.6-1.4-1.9-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.5 13.7l10-7.2-8 8.4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-        Buyurtmani Telegramda kuzatish
-      </a>
-      <br style="display:none;" id="telegramTrackBr">
       <a href="index.html" class="btn-brass">Bosh sahifaga qaytish</a>
     </div>
 
@@ -480,14 +474,6 @@
     </div>
   </div>
 </section>
-
-<a href="https://t.me/+998933002020" target="_blank" rel="noopener" class="float-contact" aria-label="Telegram orqali yozing">
-  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M22 3L2.5 10.7c-.7.3-.7 1.3.1 1.5l4.9 1.5 1.9 6.1c.2.7 1.1.9 1.6.3l2.7-3 5 3.7c.6.5 1.5.1 1.7-.6L23.9 4c.2-.8-.6-1.4-1.9-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-    <path d="M7.5 13.7l10-7.2-8 8.4" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-  </svg>
-  <span class="float-ping"></span>
-</a>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -702,15 +688,6 @@
       var mobBar = document.getElementById('mobileOrderBar');
       if (mobBar) mobBar.style.display = 'none';
 
-      // Mijozga shaxsiy Telegram tasdiqlash xabari uchun tugma
-      // (sendTelegramOrder ichida window.lastOrderTelegramLink o'rnatiladi)
-      var trackBtn = document.getElementById('telegramTrackBtn');
-      var trackBr = document.getElementById('telegramTrackBr');
-      if (trackBtn && window.lastOrderTelegramLink) {
-        trackBtn.href = window.lastOrderTelegramLink;
-        trackBtn.style.display = 'inline-flex';
-        if (trackBr) trackBr.style.display = 'block';
-      }
 
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

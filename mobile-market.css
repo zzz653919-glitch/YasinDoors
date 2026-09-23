@@ -2,7 +2,7 @@
    YASINDOORS — mobil "market" qobig'i (mobile-market.css)
    -----------------------------------------------------------------------
    style.css'dagi token va umumiy komponentlar (finish-panel, swatch,
-   process-row, specs-table, about-card, float-contact, auth modal,
+   process-row, specs-table, about-card, auth modal,
    btn-brass) ustiga qurilgan — faqat mp- prefiksli, mobilga xos
    qatlamlarni qo'shadi: top-bar, qidiruv, banner, kartalar grid,
    pastki tab-navigatsiya.
@@ -29,7 +29,7 @@ body.mp-has-tabbar { padding-bottom: 66px; }
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 8px 14px;
   background: rgba(23, 19, 15, 0.9);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);

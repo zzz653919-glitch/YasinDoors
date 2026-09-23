@@ -331,7 +331,7 @@ function renderFinalStep(){
       '<div class="confirm-box" id="confirmBox">'+
         '<div class="tick"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'+
         '<h4>Buyurtma tayyorlandi!</h4>'+
-        '<p>Telegram oynasi ochildi — xabarni yuborishni tasdiqlang, mutaxassisimiz tez orada siz bilan bog\'lanadi.</p>'+
+        '<p>Tez orada mutaxassisimiz siz bilan bog\'lanadi.</p>'+
       '</div>'+
     '</div>'+
   '</div>';
@@ -738,9 +738,6 @@ function attachFinalListeners(){
   sendBtn.addEventListener('click', function(){
     if(!validateContact()) return;
     sendOrderToSheets();
-    var text = buildOrderText();
-    var url = 'https://t.me/share/url?url=' + encodeURIComponent('YasinDoors') + '&text=' + encodeURIComponent(text);
-    window.open(url, '_blank', 'noopener');
     confirmBox.classList.add('show');
   });
 

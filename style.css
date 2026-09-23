@@ -130,12 +130,12 @@ input:focus-visible {
   max-width: 560px;
 }
 
-/* ---------- 4. NAVBAR ---------- */
+/* ---------- 4. NAVBAR (ixcham) ---------- */
 .navbar-custom {
   background: rgba(23, 19, 15, 0.86);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
-  padding: 16px 0;
+  padding: 9px 0;
 }
 html[data-theme="light"] .navbar-custom {
   background: rgba(247, 242, 230, 0.9);
@@ -143,48 +143,51 @@ html[data-theme="light"] .navbar-custom {
 
 .brand-mark {
   font-family: var(--font-display);
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 600;
   color: var(--cream);
   letter-spacing: 0.01em;
 }
 .brand-mark span { color: var(--brass); }
 
+.navbar-custom .navbar-collapse { column-gap: 2px; row-gap: 4px; }
+
 .nav-link-custom {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 0.84rem;
   font-weight: 500;
-  padding: 8px 14px;
+  padding: 6px 10px;
   transition: color 0.2s ease;
 }
 .nav-link-custom:hover { color: var(--brass); }
-.nav-link-custom svg { flex: none; }
+.nav-link-custom svg { flex: none; width: 14px; height: 14px; }
 
 .loc-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   color: var(--muted);
-  font-size: 0.82rem;
-  padding: 6px 12px;
+  font-size: 0.76rem;
+  padding: 5px 10px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  margin: 6px 4px;
+  margin: 4px 2px;
   text-decoration: none;
   cursor: pointer;
   transition: border-color 0.2s ease, color 0.2s ease;
 }
 .loc-badge:hover { border-color: var(--brass); color: var(--brass); }
 .loc-badge:hover > span { color: var(--brass); }
-.loc-badge > span { display: flex; flex-direction: column; line-height: 1.25; color: var(--cream); }
-.loc-sub { font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+.loc-badge > span { display: flex; flex-direction: column; line-height: 1.2; color: var(--cream); }
+.loc-badge svg { width: 15px; height: 15px; }
+.loc-sub { font-size: 0.66rem; color: var(--muted); font-weight: 400; }
 
 .theme-toggle {
-  width: 38px;
-  height: 38px;
+  width: 33px;
+  height: 33px;
   border-radius: 50%;
   border: 1px solid var(--line);
   background: transparent;
@@ -199,6 +202,11 @@ html[data-theme="light"] .navbar-custom {
 .theme-toggle .icon-moon { display: none; }
 html[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
 html[data-theme="dark"] .theme-toggle .icon-moon { display: block; }
+.theme-toggle svg { width: 16px; height: 16px; }
+
+/* Navbardagi "Kirish" kabi tugmalar ixcham bo'lsin — boshqa joylardagi
+   .btn-brass (masalan hero tugmasi) o'lchami o'zgarmaydi */
+.navbar-custom .btn-brass { padding: 8px 18px; font-size: 0.84rem; }
 
 /* ---------- 5. TUGMALAR ---------- */
 .btn-brass {
@@ -676,33 +684,3 @@ footer > .container > .row > div > p { color: var(--muted); font-size: 0.9rem; }
   font-size: 0.82rem;
 }
 
-/* ---------- 16. TELEGRAM SUZUVCHI TUGMASI ---------- */
-.float-contact {
-  position: fixed;
-  right: 22px;
-  bottom: 22px;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: var(--brass);
-  color: var(--brass-ink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 12px 28px -10px rgba(0,0,0,0.5);
-  z-index: 1040;
-}
-.float-ping {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid var(--brass);
-  animation: float-ping 2.2s ease-out infinite;
-}
-@keyframes float-ping {
-  0% { transform: scale(1); opacity: 0.7; }
-  100% { transform: scale(1.7); opacity: 0; }
-}
-
-/* Mobil sahifalarda pastki tabbar bilan to'qnashmasin */
-.mp-shell .float-contact { bottom: 88px; }
