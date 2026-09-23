@@ -6,6 +6,7 @@
 <title>Savat — YasinDoors</title>
 <meta name="theme-color" content="#17130f">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" rel="stylesheet">
 <link rel="stylesheet" href="savat.css">
 </head>
 <body>
@@ -46,6 +47,34 @@
   <div id="cartArea"></div>
 </main>
 
+<!-- MANZILNI XARITADAN TANLASH OYNASI -->
+<div class="map-modal" id="mapModal" role="dialog" aria-modal="true" aria-labelledby="mapModalTitle" aria-hidden="true">
+  <div class="map-modal-card">
+    <div class="map-modal-head">
+      <h3 id="mapModalTitle">Manzilni xaritadan tanlang</h3>
+      <button type="button" class="map-close" id="mapCloseBtn" aria-label="Yopish">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="map-search">
+      <input type="text" id="mapSearchInput" placeholder="Manzilni qidiring: masalan, Jizzax, Sharof Rashidov ko'chasi" aria-label="Manzilni qidirish">
+      <button type="button" class="btn" id="mapSearchBtn">Qidirish</button>
+      <button type="button" class="btn" id="mapLocateBtn">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><circle cx="12" cy="12" r="8"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg>
+        Mening joylashuvim
+      </button>
+    </div>
+    <div id="pickerMap"></div>
+    <div class="map-status" id="mapStatus"></div>
+    <div class="map-picked" id="mapPicked"></div>
+    <div class="map-modal-foot">
+      <button type="button" class="btn" id="mapCancelBtn">Bekor qilish</button>
+      <button type="button" class="btn primary" id="mapConfirmBtn" disabled>Shu manzilni tanlash</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="bot-config.js"></script>
 <script src="models-data.js"></script>
 <script src="savat.js"></script>
