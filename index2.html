@@ -30,8 +30,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="mobile-market.css">
+<link rel="stylesheet" href="intro.css">
 </head>
 <body class="mp-shell mp-home mp-has-tabbar">
+<div class="intro" id="introScreen" role="status" aria-live="polite" aria-label="Sayt yuklanmoqda">
+  <div class="intro-stage">
+    <svg class="intro-door" viewBox="0 0 140 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect class="i-frame" x="3" y="3" width="134" height="254" rx="4" pathLength="1"/>
+      <rect class="i-body" x="14" y="14" width="112" height="232" rx="2"/>
+      <rect class="i-hinge h1" x="10" y="38" width="7" height="15" rx="1.5"/>
+      <rect class="i-hinge h2" x="10" y="196" width="7" height="15" rx="1.5"/>
+      <rect class="i-window" x="34" y="30" width="72" height="46" rx="2"/>
+      <rect class="i-panel p1" x="26" y="92" width="88" height="56" rx="2"/>
+      <rect class="i-panel p2" x="26" y="160" width="88" height="66" rx="2"/>
+      <rect class="i-handle" x="103" y="122" width="7" height="34" rx="3.5"/>
+      <circle class="i-lock" cx="106.5" cy="168" r="3.6"/>
+    </svg>
+  </div>
+  <div class="intro-text">
+    <div class="intro-brand">Yasin<span>Doors</span></div>
+    <div class="intro-tag">Eshigingiz yasalmoqda…</div>
+    <div class="intro-bar"><span></span></div>
+  </div>
+  <button type="button" class="intro-skip" id="introSkip">O'tkazib yuborish</button>
+</div>
+<script src="intro.js"></script>
+
 
 <!-- TOP BAR: manzil + tema -->
 <div class="mp-topbar">
