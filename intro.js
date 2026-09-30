@@ -42,5 +42,5 @@
 
   // Xavfsizlik uchun: har qanday sababdan animatsiya to'xtab qolsa,
   // 6 soniyadan keyin baribir sayt ko'rinadi.
-  setTimeout(hide, 6000);
+  setTimeout(hide, 8000);
 })();
