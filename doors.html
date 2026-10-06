@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MDF Eshiklar — YasinDoors</title>
+  <meta name="description" content="YasinDoors MDF eshiklar katalogi.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}catch(e){}</script>
+</head>
+<body data-page="doors">
+  <a class="skip" href="#main">Asosiy kontentga o‘tish</a>
+  <header class="header" id="site-header"></header>
+  <main id="main">
+    <section class="phero"><div class="container reveal"><p class="eyebrow">YasinDoors</p><h1>MDF Eshiklar</h1><p>Zamonaviy va klassik MDF eshiklar kolleksiyasi.</p></div></section>
+    <section class="section"><div class="container">
+      <div class="tools">
+        <div class="search"><label for="search" class="sr">MDF eshik qidirish</label><input class="field" id="search" type="search" placeholder="🔍 MDF eshik qidirish..." autocomplete="off"></div>
+        <div class="sort"><label for="sort" class="sr">Saralash</label>
+          <select class="select" id="sort"><option value="rec">Tavsiya etilgan</option><option value="asc">Narx: pastdan yuqoriga</option><option value="desc">Narx: yuqoridan pastga</option><option value="az">A-Z</option><option value="za">Z-A</option></select></div>
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Filterlar"></div>
+      <div class="grid" id="doorsGrid"></div>
+    </div></section>
+    <section class="cta" id="site-cta"></section>
+  </main>
+  <footer class="footer" id="site-footer"></footer>
+  <script src="script.js"></script>
+</body>
+</html>
