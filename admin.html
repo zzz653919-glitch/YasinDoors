@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin panel — YasinDoors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}catch(e){}</script>
+  <style>
+    /* Admin panel: o‘z stili (sayt bilan bir xil ranglar va Dark/Light rejim) */
+    :root{--bg:#faf8f5;--bg2:#f3efe9;--bg3:#ebe6de;--tx:#17150f;--tx2:#5e5a52;--card:#fff;--line:rgba(30,24,12,.12);--acc:#a67443;--btn:#17150f;--btnTx:#fff;--ok:#1f8a5b;--warn:#b9770e;--bad:#d6275a;
+      --sh:0 1px 2px rgba(30,20,0,.05),0 10px 28px rgba(30,20,0,.07);--r:16px;color-scheme:light}
+    :root[data-theme="dark"]{--bg:#111314;--bg2:#171a1c;--bg3:#1f2326;--tx:#f3f1ec;--tx2:#b9b5ac;--card:#181b1d;--line:rgba(255,255,255,.1);--acc:#d9a56f;--btn:#f3f1ec;--btnTx:#111314;--ok:#3fbf88;--warn:#e0a640;--bad:#ff6b8f;
+      --sh:0 1px 2px rgba(0,0,0,.4),0 10px 28px rgba(0,0,0,.35);color-scheme:dark}
+    *{box-sizing:border-box;margin:0}
+    body{font:400 16px/1.55 'Manrope',system-ui,sans-serif;background:var(--bg2);color:var(--tx);overflow-x:clip}
+    h1,h2,h3{letter-spacing:-.02em;line-height:1.15;font-weight:800}
+    h1{font-size:clamp(24px,4vw,32px)}h2{font-size:20px}h3{font-size:16px}
+    p,.muted{color:var(--tx2)}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer}
+    :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+    [hidden]{display:none!important}
+    .i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+    /* Tugmalar va maydonlar */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 20px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-weight:700;font-size:14.5px;transition:.2s}
+    .btn:hover{border-color:var(--tx2)}.btn--p{background:var(--btn);color:var(--btnTx);border-color:var(--btn)}.btn--d{color:var(--bad)}.btn--d:hover{border-color:var(--bad)}
+    .btn--sm{min-height:38px;padding:6px 14px;font-size:13.5px}.btn[disabled]{opacity:.55;pointer-events:none}
+    .ibtn{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:0;background:none}.ibtn:hover{background:var(--bg3)}
+    .in{width:100%;min-height:46px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);transition:.2s}
+    .in:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 16%,transparent)}
+    textarea.in{min-height:84px;resize:vertical}
+    select.in{appearance:none;padding-right:38px;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center}
+    label{display:block;margin-bottom:5px;font-size:13px;font-weight:700;color:var(--tx2)}
+    .fld{margin-bottom:14px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+    .chk{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:15px;font-weight:600;color:var(--tx)}.chk input{width:20px;height:20px;accent-color:var(--acc)}
+    .err{margin:8px 0;padding:10px 14px;border-radius:12px;background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad);font-size:14px;font-weight:600}.err:empty{display:none}
+    /* Kirish */
+    .login{min-height:100dvh;display:grid;place-items:center;padding:20px}
+    .login__box{width:min(400px,100%);padding:34px;background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--sh)}
+    .login__box h1{margin:16px 0 6px}.login__box .btn{width:100%;margin-top:6px}
+    .brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.03em}.brand b{color:var(--acc);font-weight:500}
+    .brand .i{width:26px;height:26px;color:var(--acc)}
+    /* Asosiy maket */
+    .top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+    .top__in{display:flex;align-items:center;gap:14px;width:min(1200px,100% - 32px);margin:0 auto;min-height:64px}
+    .tabs{display:flex;gap:4px;margin-left:12px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+    .tabs a{position:relative;display:flex;align-items:center;gap:6px;min-height:44px;padding:8px 14px;border-radius:999px;font-weight:700;font-size:14.5px;color:var(--tx2);white-space:nowrap;transition:.2s}
+    .tabs a:hover{background:var(--bg3)}.tabs a.on{background:var(--btn);color:var(--btnTx)}
+    .pill-n{min-width:20px;padding:1px 6px;border-radius:99px;background:var(--bad);color:#fff;font-size:11.5px;font-weight:800;text-align:center}
+    .spacer{flex:1}
+    .wrap{width:min(1200px,100% - 32px);margin:0 auto;padding:28px 0 80px}
+    .bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+    .tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}.tools .in{flex:1 1 240px;max-width:420px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}.chip{min-height:40px;padding:6px 16px;border:1px solid var(--line);border-radius:99px;background:var(--card);font-weight:700;font-size:14px}
+    .chip[aria-pressed="true"]{background:var(--btn);color:var(--btnTx);border-color:var(--btn)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+    /* Statistika */
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:26px}
+    .stat{padding:20px 22px}.stat span{display:block;font-size:13px;font-weight:700;color:var(--tx2)}.stat b{display:block;margin-top:4px;font-size:26px;letter-spacing:-.03em}
+    .stat--hot b{color:var(--bad)}
+    /* Zakazlar */
+    .olist{display:grid;gap:14px}
+    .oc{padding:20px 22px}.oc__h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+    .oc__h b{font-size:15px}.oc__h .muted{margin-left:10px;font-size:13.5px}
+    .oc__b{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .oc__b h3{margin-bottom:4px}.oc__b a{color:var(--acc);font-weight:700}.oc__b p{font-size:14.5px}
+    .items li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14.5px}.items li:last-child{border:0}
+    .oc__n{margin-top:12px;padding:10px 14px;border-radius:12px;background:var(--bg2);font-size:14.5px}
+    .oc__f{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+    .oc__f b{font-size:18px}
+    .st{min-height:38px;width:auto;padding:4px 34px 4px 14px;border-radius:99px;font-weight:800;font-size:13.5px}
+    .st--new{border-color:var(--bad);color:var(--bad)}.st--processing{border-color:var(--warn);color:var(--warn)}.st--done{border-color:var(--ok);color:var(--ok)}.st--cancelled{color:var(--tx2)}
+    .tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:800;border:1px solid var(--line);color:var(--tx2)}
+    .tag--new{color:var(--bad);border-color:var(--bad)}.tag--processing{color:var(--warn);border-color:var(--warn)}.tag--done{color:var(--ok);border-color:var(--ok)}
+    .recent li{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding:14px 22px;border-bottom:1px solid var(--line)}.recent li:last-child{border:0}
+    .empty{padding:48px 20px;text-align:center}
+    /* Mahsulotlar */
+    .plist{display:grid;gap:12px}
+    .prow{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:16px;align-items:center;padding:14px 18px}
+    .sw{display:block;width:44px;height:56px;border-radius:6px;border:3px solid var(--e,#999);background:var(--h,#ccc);box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
+    .prow img{width:56px;height:56px;object-fit:cover;border-radius:10px}
+    .prow h3{margin-bottom:2px}.prow .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+    .prow .acts{display:flex;gap:8px}
+    /* Dialog */
+    dialog{width:min(640px,calc(100% - 24px));max-height:calc(100dvh - 24px);padding:0;border:1px solid var(--line);border-radius:24px;background:var(--card);color:var(--tx);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+    dialog::backdrop{background:rgba(10,10,10,.55);backdrop-filter:blur(6px)}
+    dialog form,.dlg{padding:26px}dialog h2{margin-bottom:18px}.dlg__f{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+    /* Toast */
+    .toasts{position:fixed;left:50%;bottom:20px;z-index:200;display:grid;gap:8px;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 24px)}
+    .toast{padding:12px 20px;border-radius:14px;background:var(--btn);color:var(--btnTx);font-weight:700;font-size:14.5px;box-shadow:var(--sh);animation:in .3s ease}@keyframes in{from{opacity:0;transform:translateY(10px)}}
+    @media(max-width:760px){.oc__b{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.prow{grid-template-columns:48px minmax(0,1fr)}.prow .acts{grid-column:1/-1}.sw{width:40px;height:50px}.prow img{width:48px;height:48px}
+      .top__in{flex-wrap:wrap;padding:6px 0}.tabs{order:3;width:100%;margin:0}.wrap{padding-top:20px}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <!-- Kirish -->
+  <div class="login" id="login" hidden>
+    <form class="login__box" id="loginForm" novalidate>
+      <span class="brand"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="1.5"/><circle cx="15" cy="12" r=".8"/><path d="M3 21h18"/></svg>Yasin<b>Doors</b></span>
+      <h1>Admin panel</h1><p>Davom etish uchun parolni kiriting.</p>
+      <div class="fld" style="margin-top:20px"><label for="pw">Parol</label><input class="in" id="pw" type="password" autocomplete="current-password" required></div>
+      <div class="err" id="loginErr" role="alert"></div>
+      <button class="btn btn--p" type="submit" id="loginBtn">Kirish</button>
+    </form>
+  </div>
+
+  <!-- Panel -->
+  <div id="app" hidden>
+    <header class="top"><div class="top__in">
+      <span class="brand"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="1.5"/><circle cx="15" cy="12" r=".8"/><path d="M3 21h18"/></svg>Yasin<b>Doors</b></span>
+      <nav class="tabs" aria-label="Admin menyusi">
+        <a href="#dash" data-v="dash">Boshqaruv</a>
+        <a href="#orders" data-v="orders">Zakazlar <span class="pill-n" id="newN" hidden>0</span></a>
+        <a href="#products" data-v="products">Mahsulotlar</a>
+        <a href="#settings" data-v="settings">Sozlamalar</a>
+      </nav>
+      <span class="spacer"></span>
+      <a class="ibtn" href="index.html" target="_blank" rel="noopener" aria-label="Saytni ochish" title="Saytni ochish"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></svg></a>
+      <button class="ibtn" id="themeBtn" aria-label="Dark / Light rejim" title="Dark / Light"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg></button>
+      <button class="btn btn--sm" id="logout">Chiqish</button>
+    </div></header>
+
+    <main class="wrap">
+      <section id="v-dash">
+        <div class="bar"><h1>Boshqaruv</h1><button class="btn btn--sm" data-reload>Yangilash</button></div>
+        <div class="stats" id="stats"></div>
+        <div class="card"><div class="bar" style="padding:18px 22px 0"><h2>So‘nggi zakazlar</h2><a class="btn btn--sm" href="#orders">Hammasi</a></div><ul class="recent" id="recent"></ul></div>
+      </section>
+
+      <section id="v-orders" hidden>
+        <div class="bar"><h1>Zakazlar</h1><div style="display:flex;gap:8px"><button class="btn btn--sm" data-reload>Yangilash</button><button class="btn btn--sm" id="csv">CSV yuklab olish</button></div></div>
+        <div class="tools"><input class="in" id="oq" type="search" placeholder="Ism, telefon, manzil yoki ID bo‘yicha qidirish" aria-label="Zakazlarni qidirish"></div>
+        <div class="chips" id="ochips" role="group" aria-label="Holat bo‘yicha filtr" style="margin-bottom:18px"></div>
+        <div class="olist" id="olist"></div>
+      </section>
+
+      <section id="v-products" hidden>
+        <div class="bar"><h1>Mahsulotlar</h1><button class="btn btn--p" id="addP">+ Yangi mahsulot</button></div>
+        <div class="plist" id="plist"></div>
+      </section>
+
+      <section id="v-settings" hidden>
+        <div class="bar"><h1>Sozlamalar</h1></div>
+        <form class="card dlg" id="setForm" style="max-width:560px" novalidate>
+          <h2>Yetkazib berish</h2>
+          <div class="fld"><label for="sFee">Yetkazib berish narxi (so‘m)</label><input class="in" id="sFee" type="number" min="0" step="1000" inputmode="numeric"></div>
+          <div class="fld"><label for="sFree">Shu summadan yuqori buyurtmada bepul (so‘m)</label><input class="in" id="sFree" type="number" min="0" step="1000" inputmode="numeric"></div>
+          <div class="err" id="setErr" role="alert"></div>
+          <button class="btn btn--p" type="submit">Saqlash</button>
+        </form>
+        <div class="card dlg" style="max-width:560px;margin-top:16px">
+          <h2>Zaxira nusxa</h2><p style="margin-bottom:14px">Katalog va barcha zakazlarni JSON fayl sifatida yuklab oling.</p>
+          <a class="btn" href="/api/admin/export" download>Zaxira nusxani yuklab olish</a>
+        </div>
+        <p class="note" style="margin-top:18px;font-size:14px;max-width:560px">Admin parolini o‘zgartirish uchun <b>.env</b> faylidagi <b>ADMIN_PASSWORD</b> qiymatini almashtiring va serverni qayta ishga tushiring.</p>
+      </section>
+    </main>
+  </div>
+
+  <!-- Mahsulot oynasi -->
+  <dialog id="pdlg" aria-labelledby="pTitle">
+    <form id="pForm" novalidate>
+      <h2 id="pTitle">Mahsulot</h2>
+      <div class="fld"><label for="pName">Nomi</label><input class="in" id="pName" maxlength="60" required></div>
+      <div class="grid2">
+        <div class="fld"><label for="pPrice">Narx (so‘m)</label><input class="in" id="pPrice" type="number" min="1000" step="1000" inputmode="numeric" required></div>
+        <div class="fld"><label for="pOld">Eski narx (chegirma uchun, ixtiyoriy)</label><input class="in" id="pOld" type="number" min="0" step="1000" inputmode="numeric"></div>
+        <div class="fld"><label for="pColor">Rang guruhi</label><select class="in" id="pColor"><option value="oq">Oq</option><option value="qora">Qora</option><option value="jigarrang">Jigarrang</option><option value="yogoch">Yog‘och</option></select></div>
+        <div class="fld"><label for="pColorName">Rang nomi (saytda ko‘rinadi)</label><input class="in" id="pColorName" maxlength="30" placeholder="Masalan: Eman"></div>
+        <div class="fld"><label for="pStyle">Uslub</label><select class="in" id="pStyle"><option value="modern">Modern</option><option value="classic">Classic</option></select></div>
+        <div class="fld"><label for="pBadge">Belgi</label><select class="in" id="pBadge"><option value="">Yo‘q</option><option value="new">Yangi</option><option value="best">Bestseller</option><option value="premium">Premium</option><option value="sale">Sale</option><option value="limited">Limited</option></select></div>
+      </div>
+      <div class="fld"><label for="pMat">Material</label><input class="in" id="pMat" maxlength="80" placeholder="MDF + mat PVX qoplama"></div>
+      <div class="fld"><label for="pDesc">Qisqa tavsif (kartada)</label><input class="in" id="pDesc" maxlength="120"></div>
+      <div class="fld"><label for="pLong">Batafsil tavsif (oynada)</label><textarea class="in" id="pLong" maxlength="400"></textarea></div>
+      <div class="fld"><label for="pTags">Qidiruv teglari (bo‘shliq bilan; filtr uchun “minimal” deb yozish mumkin)</label><input class="in" id="pTags" maxlength="120"></div>
+      <div class="fld"><label for="pImg">Rasm havolasi (ixtiyoriy; bo‘sh qolsa eshik chizmasi ishlatiladi)</label><input class="in" id="pImg" maxlength="300" placeholder="https://… yoki img/eshik.jpg"></div>
+      <label class="chk"><input type="checkbox" id="pStock"> Omborda mavjud</label>
+      <label class="chk"><input type="checkbox" id="pHidden"> Saytda yashirish</label>
+      <div class="err" id="pErr" role="alert"></div>
+      <div class="dlg__f"><button type="button" class="btn" id="pCancel">Bekor qilish</button><button type="submit" class="btn btn--p" id="pSave">Saqlash</button></div>
+    </form>
+  </dialog>
+
+  <!-- Tasdiqlash oynasi -->
+  <dialog id="cdlg" aria-labelledby="cTitle"><div class="dlg"><h2 id="cTitle">Ishonchingiz komilmi?</h2><p id="cText"></p>
+    <div class="dlg__f"><button class="btn" id="cNo">Yo‘q</button><button class="btn btn--p" id="cYes">Ha, o‘chirish</button></div></div></dialog>
+
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const money = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' so‘m';
+  const when = iso => new Date(iso).toLocaleString('ru-RU', { timeZone: 'Asia/Tashkent', dateStyle: 'short', timeStyle: 'short' });
+  const ST = { new: 'Yangi', processing: 'Jarayonda', done: 'Yakunlandi', cancelled: 'Bekor qilingan' };
+  const BADGE = { new: 'Yangi', best: 'Bestseller', premium: 'Premium', sale: 'Sale', limited: 'Limited' };
+  const S = { orders: [], products: [], settings: {}, filter: 'all', q: '', knownNew: null };
+
+  /* ---------- API ---------- */
+  async function api(method, url, body) {
+    const r = await fetch(url, { method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'yd-admin' }, body: body ? JSON.stringify(body) : undefined });
+    const d = await r.json().catch(() => ({}));
+    if (r.status === 401 && url !== '/api/admin/login') { showLogin(); throw new Error(d.error || 'Kirish talab qilinadi.'); }
+    if (!r.ok || d.ok === false) throw new Error(d.error || 'Xatolik yuz berdi.');
+    return d;
+  }
+  function toast(msg) {
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; $('#toasts').appendChild(t); setTimeout(() => t.remove(), 3000);
+  }
+  function confirmBox(text, yes = 'Ha, o‘chirish') {
+    return new Promise(res => {
+      const d = $('#cdlg'); $('#cText').textContent = text; $('#cYes').textContent = yes;
+      const done = v => { d.close(); $('#cYes').onclick = $('#cNo').onclick = null; res(v); };
+      $('#cYes').onclick = () => done(true); $('#cNo').onclick = () => done(false); d.onclose = () => res(false); d.showModal();
+    });
+  }
+
+  /* ---------- Kirish / chiqish ---------- */
+  function showLogin(msg) { $('#app').hidden = true; $('#login').hidden = false; if (msg) $('#loginErr').textContent = msg; $('#pw').focus(); }
+  async function boot() {
+    try {
+      const r = await fetch('/api/admin/me', { credentials: 'same-origin' }), d = await r.json().catch(() => ({}));
+      if (r.ok && d.ok) { await enter(); return; }
+      showLogin(d.enabled === false ? 'Admin panel o‘chirilgan: .env fayliga kamida 8 belgili ADMIN_PASSWORD yozing.' : '');
+    } catch { showLogin('Server bilan aloqa yo‘q. Saytni “node server.js” orqali oching.'); }
+  }
+  async function enter() {
+    $('#login').hidden = true; $('#app').hidden = false;
+    await Promise.all([loadOrders(), loadProducts(), loadSettings()]);
+    route();
+  }
+  $('#loginForm').addEventListener('submit', async e => {
+    e.preventDefault(); const b = $('#loginBtn'); b.disabled = true; $('#loginErr').textContent = '';
+    try { await api('POST', '/api/admin/login', { password: $('#pw').value }); $('#pw').value = ''; await enter(); }
+    catch (err) { $('#loginErr').textContent = err.message; }
+    finally { b.disabled = false; }
+  });
+  $('#logout').addEventListener('click', async () => { try { await api('POST', '/api/admin/logout'); } catch { /* ignore */ } S.knownNew = null; showLogin(); });
+
+  /* ---------- Tema ---------- */
+  $('#themeBtn').addEventListener('click', () => {
+    const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t; try { localStorage.setItem('theme', t); } catch { /* ignore */ }
+  });
+
+  /* ---------- Yo‘naltirish ---------- */
+  function route() {
+    const v = (location.hash || '#dash').slice(1), view = ['dash', 'orders', 'products', 'settings'].includes(v) ? v : 'dash';
+    $$('main > section').forEach(s => { s.hidden = s.id !== 'v-' + view; });
+    $$('.tabs a').forEach(a => { const on = a.dataset.v === view; a.classList.toggle('on', on); on ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'); });
+    document.title = (view === 'orders' ? 'Zakazlar' : view === 'products' ? 'Mahsulotlar' : view === 'settings' ? 'Sozlamalar' : 'Boshqaruv') + ' — YasinDoors admin';
+  }
+  addEventListener('hashchange', route);
+  $$('[data-reload]').forEach(b => b.addEventListener('click', async () => { await loadOrders(); await loadProducts(); toast('Yangilandi'); }));
+
+  /* ---------- Zakazlar ---------- */
+  async function loadOrders(quiet) {
+    try {
+      const d = await api('GET', '/api/admin/orders'); S.orders = d.orders;
+      const n = S.orders.filter(o => o.status === 'new').length;
+      if (quiet && S.knownNew !== null && n > S.knownNew) toast('Yangi zakaz keldi!');
+      S.knownNew = n; renderOrders(); renderDash();
+    } catch (e) { if (!quiet) toast(e.message); }
+  }
+  function renderDash() {
+    const o = S.orders, cnt = s => o.filter(x => x.status === s).length, sum = f => o.filter(f).reduce((a, x) => a + x.total, 0);
+    const n = cnt('new'); $('#newN').hidden = !n; $('#newN').textContent = n;
+    $('#stats').innerHTML = [
+      ['Yangi zakazlar', n, n ? 'stat--hot' : ''], ['Jarayonda', cnt('processing')], ['Jami zakazlar', o.length],
+      ['Yakunlangan summa', money(sum(x => x.status === 'done'))], ['Kutilayotgan summa', money(sum(x => x.status === 'new' || x.status === 'processing'))],
+      ['Mahsulotlar', `${S.products.filter(p => !p.hidden).length} / ${S.products.length}`]
+    ].map(([t, v, c]) => `<div class="card stat ${c || ''}"><span>${esc(t)}</span><b>${esc(v)}</b></div>`).join('');
+    $('#recent').innerHTML = o.slice(0, 5).map(x => `<li><span><b>${esc(x.name)}</b> <span class="muted">· ${esc(when(x.createdAt))}</span></span><span><b>${money(x.total)}</b> <span class="tag tag--${esc(x.status)}">${esc(ST[x.status])}</span></span></li>`).join('') || '<li class="muted">Hozircha zakaz yo‘q.</li>';
+  }
+  const visibleOrders = () => {
+    const q = S.q.trim().toLowerCase();
+    return S.orders.filter(o => (S.filter === 'all' || o.status === S.filter) && (!q || `${o.id} ${o.name} ${o.phone} ${o.address}`.toLowerCase().includes(q)));
+  };
+  function renderOrders() {
+    $('#ochips').innerHTML = [['all', 'Barchasi'], ...Object.entries(ST)].map(([k, t]) => {
+      const c = k === 'all' ? S.orders.length : S.orders.filter(o => o.status === k).length;
+      return `<button class="chip" data-f="${k}" aria-pressed="${S.filter === k}">${esc(t)} (${c})</button>`;
+    }).join('');
+    const list = visibleOrders();
+    $('#olist').innerHTML = list.length ? list.map(o => `<article class="card oc" data-id="${esc(o.id)}">
+      <div class="oc__h"><span><b>${esc(o.id)}</b><span class="muted">${esc(when(o.createdAt))}</span></span>
+        <select class="in st st--${esc(o.status)}" data-act="status" aria-label="Zakaz holati ${esc(o.id)}">${Object.entries(ST).map(([k, t]) => `<option value="${k}"${o.status === k ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></div>
+      <div class="oc__b"><div><h3>${esc(o.name)}</h3><p><a href="tel:${esc(o.phone.replace(/[^+\d]/g, ''))}">${esc(o.phone)}</a></p><p>${esc(o.address)}</p></div>
+        <ul class="items">${o.items.map(i => `<li><span>${esc(i.name)} × ${i.qty}</span><b>${money(i.price * i.qty)}</b></li>`).join('')}${o.delivery ? `<li><span>Yetkazib berish</span><b>${money(o.delivery)}</b></li>` : ''}</ul></div>
+      ${o.note ? `<div class="oc__n"><b>Izoh:</b> ${esc(o.note)}</div>` : ''}
+      <div class="oc__f"><b>Jami: ${money(o.total)}</b><button class="btn btn--d btn--sm" data-act="del">O‘chirish</button></div></article>`).join('')
+      : `<div class="card empty"><h3>${S.orders.length ? 'Hech narsa topilmadi' : 'Hozircha zakaz yo‘q'}</h3><p>${S.orders.length ? 'Filtr yoki qidiruvni o‘zgartirib ko‘ring.' : 'Mijozlar zakaz bergach, shu yerda ko‘rinadi.'}</p></div>`;
+  }
+  $('#ochips').addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) { S.filter = c.dataset.f; renderOrders(); } });
+  $('#oq').addEventListener('input', e => { S.q = e.target.value; renderOrders(); });
+  $('#olist').addEventListener('change', async e => {
+    if (e.target.dataset.act !== 'status') return;
+    const id = e.target.closest('.oc').dataset.id;
+    try { await api('PATCH', '/api/admin/orders/' + encodeURIComponent(id), { status: e.target.value }); toast('Holat yangilandi'); await loadOrders(); }
+    catch (err) { toast(err.message); await loadOrders(); }
+  });
+  $('#olist').addEventListener('click', async e => {
+    if (e.target.dataset.act !== 'del') return;
+    const id = e.target.closest('.oc').dataset.id;
+    if (!await confirmBox(`Zakaz ${id} butunlay o‘chiriladi.`)) return;
+    try { await api('DELETE', '/api/admin/orders/' + encodeURIComponent(id)); toast('Zakaz o‘chirildi'); await loadOrders(); } catch (err) { toast(err.message); }
+  });
+  $('#csv').addEventListener('click', () => {      // Excel uchun CSV (formula in’yeksiyasiga qarshi himoya bilan)
+    const cell = v => { v = String(v ?? ''); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
+    const rows = [['ID', 'Sana', 'Ism', 'Telefon', 'Manzil', 'Mahsulotlar', 'Yetkazib berish', 'Jami', 'Holat', 'Izoh']].concat(visibleOrders().map(o =>
+      [o.id, when(o.createdAt), o.name, o.phone, o.address, o.items.map(i => `${i.name} x${i.qty}`).join('; '), o.delivery, o.total, ST[o.status], o.note]));
+    const blob = new Blob(['\ufeff' + rows.map(r => r.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'zakazlar.csv' }); a.click(); URL.revokeObjectURL(a.href);
+  });
+
+  /* ---------- Mahsulotlar ---------- */
+  async function loadProducts() { try { S.products = (await api('GET', '/api/admin/products')).products; renderProducts(); renderDash(); } catch (e) { toast(e.message); } }
+  function renderProducts() {
+    $('#plist').innerHTML = S.products.map(p => `<article class="card prow" data-id="${p.id}">
+      ${p.image ? `<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy">` : `<span class="sw" style="--h:${esc(p.hex)};--e:${esc(p.edge)}" role="img" aria-label="${esc(p.name)}"></span>`}
+      <div><h3>${esc(p.name)}</h3><div><b>${money(p.price)}</b>${p.old ? ` <s class="muted">${money(p.old)}</s>` : ''} <span class="muted">· ${esc(p.styleName)} · ${esc(p.colorName)}</span></div>
+        <div class="tags">${p.badge ? `<span class="tag">${esc(BADGE[p.badge])}</span>` : ''}<span class="tag${p.stock ? ' tag--done' : ''}">${p.stock ? 'Omborda' : 'Buyurtma asosida'}</span>${p.hidden ? '<span class="tag tag--new">Yashirin</span>' : ''}</div></div>
+      <div class="acts"><button class="btn btn--sm" data-act="edit">Tahrirlash</button><button class="btn btn--d btn--sm" data-act="del">O‘chirish</button></div></article>`).join('')
+      || '<div class="card empty"><h3>Mahsulot yo‘q</h3><p>“Yangi mahsulot” tugmasi bilan qo‘shing.</p></div>';
+  }
+  const F = id => $('#' + id);
+  function openProduct(p) {
+    $('#pTitle').textContent = p ? 'Mahsulotni tahrirlash' : 'Yangi mahsulot'; $('#pErr').textContent = ''; $('#pForm').dataset.id = p ? p.id : '';
+    const d = p || { name: '', price: '', old: '', color: 'oq', colorName: '', style: 'modern', badge: '', material: 'MDF', desc: '', long: '', tags: '', image: '', stock: true, hidden: false };
+    F('pName').value = d.name; F('pPrice').value = d.price; F('pOld').value = d.old || ''; F('pColor').value = d.color; F('pColorName').value = d.colorName; F('pStyle').value = d.style;
+    F('pBadge').value = d.badge || ''; F('pMat').value = d.material; F('pDesc').value = d.desc; F('pLong').value = d.long; F('pTags').value = d.tags; F('pImg').value = d.image || '';
+    F('pStock').checked = !!d.stock; F('pHidden').checked = !!d.hidden; $('#pdlg').showModal(); F('pName').focus();
+  }
+  $('#addP').addEventListener('click', () => openProduct(null));
+  $('#pCancel').addEventListener('click', () => $('#pdlg').close());
+  $('#plist').addEventListener('click', async e => {
+    const act = e.target.dataset.act, row = e.target.closest('.prow'); if (!act || !row) return;
+    const p = S.products.find(x => x.id === +row.dataset.id);
+    if (act === 'edit') return openProduct(p);
+    if (act === 'del' && await confirmBox(`“${p.name}” katalogdan o‘chiriladi. Eski zakazlar saqlanib qoladi.`)) {
+      try { await api('DELETE', '/api/admin/products/' + p.id); toast('Mahsulot o‘chirildi'); await loadProducts(); } catch (err) { toast(err.message); }
+    }
+  });
+  $('#pForm').addEventListener('submit', async e => {
+    e.preventDefault(); const id = e.target.dataset.id, b = $('#pSave'); $('#pErr').textContent = '';
+    const body = { name: F('pName').value, price: Number(F('pPrice').value), old: F('pOld').value === '' ? null : Number(F('pOld').value), color: F('pColor').value, colorName: F('pColorName').value,
+      style: F('pStyle').value, badge: F('pBadge').value, material: F('pMat').value, desc: F('pDesc').value, long: F('pLong').value, tags: F('pTags').value, image: F('pImg').value,
+      stock: F('pStock').checked, hidden: F('pHidden').checked };
+    b.disabled = true;
+    try { await api(id ? 'PUT' : 'POST', '/api/admin/products' + (id ? '/' + id : ''), body); $('#pdlg').close(); toast('Saqlandi'); await loadProducts(); }
+    catch (err) { $('#pErr').textContent = err.message; }
+    finally { b.disabled = false; }
+  });
+
+  /* ---------- Sozlamalar ---------- */
+  async function loadSettings() { try { S.settings = (await api('GET', '/api/admin/settings')).settings; F('sFee').value = S.settings.deliveryFee; F('sFree').value = S.settings.freeFrom; } catch (e) { toast(e.message); } }
+  $('#setForm').addEventListener('submit', async e => {
+    e.preventDefault(); $('#setErr').textContent = '';
+    try { await api('PUT', '/api/admin/settings', { deliveryFee: Number(F('sFee').value), freeFrom: Number(F('sFree').value) }); toast('Sozlamalar saqlandi'); }
+    catch (err) { $('#setErr').textContent = err.message; }
+  });
+
+  /* Yangi zakazlarni tekshirib turish (har 45 soniyada) */
+  setInterval(() => { if (!$('#app').hidden && !document.hidden) loadOrders(true); }, 45000);
+  boot();
+})();
+</script>
+</body>
+</html>
