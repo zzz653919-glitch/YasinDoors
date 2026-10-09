@@ -168,7 +168,7 @@
       <div class="grid2">
         <div class="fld"><label for="pPrice">Narx (so‘m)</label><input class="in" id="pPrice" type="number" min="1000" step="1000" inputmode="numeric" required></div>
         <div class="fld"><label for="pOld">Eski narx (chegirma uchun, ixtiyoriy)</label><input class="in" id="pOld" type="number" min="0" step="1000" inputmode="numeric"></div>
-        <div class="fld"><label for="pColor">Rang guruhi</label><select class="in" id="pColor"><option value="oq">Oq</option><option value="qora">Qora</option><option value="jigarrang">Jigarrang</option><option value="yogoch">Yog‘och</option></select></div>
+        <div class="fld"><label for="pColor">Rang guruhi</label><select class="in" id="pColor"><option value="oq">Oq</option><option value="qora">Qora</option><option value="jigarrang">Jigarrang</option><option value="yogoch">Yog‘och</option><option value="kulrang">Kulrang</option></select></div>
         <div class="fld"><label for="pColorName">Rang nomi (saytda ko‘rinadi)</label><input class="in" id="pColorName" maxlength="30" placeholder="Masalan: Eman"></div>
         <div class="fld"><label for="pStyle">Uslub</label><select class="in" id="pStyle"><option value="modern">Modern</option><option value="classic">Classic</option></select></div>
         <div class="fld"><label for="pBadge">Belgi</label><select class="in" id="pBadge"><option value="">Yo‘q</option><option value="new">Yangi</option><option value="best">Bestseller</option><option value="premium">Premium</option><option value="sale">Sale</option><option value="limited">Limited</option></select></div>
@@ -289,7 +289,7 @@
     }).join('');
     const list = visibleOrders();
     $('#olist').innerHTML = list.length ? list.map(o => `<article class="card oc" data-id="${esc(o.id)}">
-      <div class="oc__h"><span><b>${esc(o.id)}</b><span class="muted">${esc(when(o.createdAt))}</span></span>
+      <div class="oc__h"><span><b>${esc(o.id)}</b><span class="muted">${esc(when(o.createdAt))}</span>${o.telegram === 'failed' ? ' <span class="tag tag--new" title="Telegramga xabar yuborilmadi, lekin zakaz saqlangan">Telegramga yuborilmadi</span>' : o.telegram === 'off' ? ' <span class="tag" title="Telegram sozlanmagan">Telegram ulanmagan</span>' : ''}</span>
         <select class="in st st--${esc(o.status)}" data-act="status" aria-label="Zakaz holati ${esc(o.id)}">${Object.entries(ST).map(([k, t]) => `<option value="${k}"${o.status === k ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></div>
       <div class="oc__b"><div><h3>${esc(o.name)}</h3><p><a href="tel:${esc(o.phone.replace(/[^+\d]/g, ''))}">${esc(o.phone)}</a></p><p>${esc(o.address)}</p></div>
         <ul class="items">${o.items.map(i => `<li><span>${esc(i.name)} × ${i.qty}</span><b>${money(i.price * i.qty)}</b></li>`).join('')}${o.delivery ? `<li><span>Yetkazib berish</span><b>${money(o.delivery)}</b></li>` : ''}</ul></div>
@@ -366,8 +366,8 @@
     catch (err) { $('#setErr').textContent = err.message; }
   });
 
-  /* Yangi zakazlarni tekshirib turish (har 45 soniyada) */
-  setInterval(() => { if (!$('#app').hidden && !document.hidden) loadOrders(true); }, 45000);
+  /* Yangi zakazlarni tekshirib turish (har 20 soniyada) */
+  setInterval(() => { if (!$('#app').hidden && !document.hidden) loadOrders(true); }, 20000);
   boot();
 })();
 </script>

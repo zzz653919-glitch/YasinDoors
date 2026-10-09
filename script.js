@@ -68,6 +68,23 @@
   let cart = Object.fromEntries(Object.entries(savedCart && typeof savedCart === 'object' ? savedCart : {}).filter(([id, q]) => find(id) && Number.isInteger(q) && q > 0));
   let favs = Array.isArray(savedFavs) ? savedFavs.filter(find) : [];
 
+  /* ---------- 3b. Katalog serverdan (admin panel bilan bir xil mahsulot, narx va yetkazib berish).
+     Server javob bermasa — yuqoridagi o‘rnatilgan ro‘yxat ishlayveradi ---------- */
+  async function loadCatalog() {
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 2500);
+    try {
+      const r = await fetch('/api/catalog', { signal: ctl.signal, cache: 'no-store' });
+      const d = r.ok ? await r.json() : null;
+      if (!d || !d.ok || !Array.isArray(d.products) || !d.products.length) return;
+      PRODUCTS.splice(0, PRODUCTS.length, ...d.products);
+      if (d.settings) { DELIVERY.fee = d.settings.deliveryFee; DELIVERY.freeFrom = d.settings.freeFrom; }
+      cart = Object.fromEntries(Object.entries(cart).filter(([id]) => find(id)));   // o‘chirilgan mahsulotlar savatdan tushadi
+      favs = favs.filter(find);
+      store.set('cart', cart); store.set('favorites', favs);
+    } catch { /* server yo‘q: o‘rnatilgan ro‘yxat ishlaydi */ }
+    finally { clearTimeout(timer); }
+  }
+
   /* ---------- 4. Realistik eshik sahnasi (SVG: devor, pol, yorug‘lik, yog‘och teksturasi) ---------- */
   const scenes = {};
   function doorImg(p) {
@@ -269,20 +286,26 @@ ${detail}<rect x="116" y="56" width="168" height="324" fill="url(#s)"/>
   }
   async function sendOrder(f) {
     const btn = $('#orderBtn'), t = totals(), el = f.elements;
-    const items = Object.keys(cart).map(id => ({ name: find(id).name, price: find(id).price, qty: cart[id] }));
+    const items = Object.keys(cart).map(id => ({ id: +id, qty: cart[id] }));   // nom va narxni server katalogdan oladi
     btn.disabled = true; btn.textContent = 'Yuborilmoqda…'; $('#o-err').innerHTML = '';
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 15000);
     try {
       const r = await fetch('/api/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
         body: JSON.stringify({ name: el.name.value, phone: el.phone.value, address: el.address.value, note: el.note.value, items, delivery: t.fee }) });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.ok) throw new Error('order failed');
+      const isJson = (r.headers.get('content-type') || '').includes('json');
+      const d = isJson ? await r.json().catch(() => ({})) : null;
+      if (!d) throw Object.assign(new Error('no-api'), { hint: 'Zakaz serveri topilmadi. Saytni “node server.js” ni ishga tushirib, http://localhost:3000 orqali oching.' });
+      if (!r.ok || !d.ok) throw Object.assign(new Error('rejected'), { hint: d.error || '' });
       cart = {}; commit();   // faqat muvaffaqiyatdan keyin savat tozalanadi
       $('#modalBox').innerHTML = `<button class="modal__x" data-act="close" aria-label="Yopish">${ICON.x}</button><div class="state">
         <svg class="bigcheck" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l8 8 14-16"/></svg>
         <h2>Zakaz qabul qilindi</h2><p>Tez orada siz bilan bog‘lanamiz.</p><a class="btn btn--p" href="doors.html">Katalogga qaytish</a></div>`;
-    } catch {
-      $('#o-err').innerHTML = ICON.x + `<span>${ORDER_ERR}</span>`;   // savat saqlanadi, qayta urinish mumkin
+    } catch (e) {
+      // Aniq sababni ko‘rsatamiz (savat saqlanadi, qayta urinish mumkin)
+      const hint = e.hint !== undefined ? e.hint : e.name === 'AbortError' ? 'Server javob bermadi (15 soniya). Internetni tekshirib, qayta urinib ko‘ring.'
+        : 'Server bilan aloqa yo‘q. “node server.js” ishlab turganini va sayt http://localhost:3000 orqali ochilganini tekshiring.';
+      $('#o-err').innerHTML = ICON.x + '<span></span>';
+      $('#o-err span').textContent = ORDER_ERR + (hint ? ' ' + hint : '');
       btn.disabled = false; btn.textContent = 'Qayta urinish';
     } finally { clearTimeout(timer); }
   }
@@ -345,9 +368,12 @@ ${detail}<rect x="116" y="56" width="168" height="324" fill="url(#s)"/>
   /* ---------- 13. Ishga tushirish ---------- */
   renderLayout();
   applyTheme(root.dataset.theme || 'light');
-  initNav(); updateCounts(); renderPage();
-  $$('[data-door]').forEach(el => { el.src = doorImg(find(el.dataset.door)); });
-  if (page === 'doors') initDoors();
-  if (page === 'contact') initContact();
-  initReveal();
+  initNav();
+  loadCatalog().then(() => {
+    updateCounts(); renderPage();
+    $$('[data-door]').forEach(el => { const p = find(el.dataset.door) || PRODUCTS[0]; if (p) el.src = doorImg(p); });
+    if (page === 'doors') initDoors();
+    if (page === 'contact') initContact();
+    initReveal();
+  });
 })();

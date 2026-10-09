@@ -1,7 +1,8 @@
 {
   "name": "yasindoors",
   "version": "1.0.0",
-  "description": "YasinDoors — MDF eshiklar internet-do‘koni",
+  "private": true,
+  "description": "YasinDoors — MDF eshiklar internet-do'koni",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
   "engines": { "node": ">=18" },
