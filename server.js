@@ -52,6 +52,19 @@ app.disable('x-powered-by');
 app.use((req, res, next) => { res.set('X-Content-Type-Options', 'nosniff'); next(); });
 app.use(express.json({ limit: '50kb' }));
 
+/* CORS: sayt VS Code “Live Server” (boshqa port) yoki fayldan ochilgan bo‘lsa ham zakaz serverga yetib borsin.
+   Faqat localhost/127.0.0.1 va file:// (“null”) uchun, faqat ochiq API (katalog, zakaz, health). Admin API uchun yoqilmagan. */
+const LOCAL_ORIGIN = /^(null|https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?)$/;
+app.use('/api', (req, res, next) => {
+  const o = req.headers.origin;
+  if (o && LOCAL_ORIGIN.test(o) && !req.path.startsWith('/admin')) {
+    res.setHeader('Access-Control-Allow-Origin', o); res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  }
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  next();
+});
+
 /* ---------- Statik fayllar: faqat ruxsat etilgan ro‘yxat (.env, server.js, data/ ochilmaydi) ---------- */
 const PAGES = ['index.html', 'doors.html', 'about.html', 'contact.html', 'cart.html', 'favorites.html', 'style.css', 'script.js'];
 const send = f => (req, res) => res.sendFile(path.join(__dirname, f));
@@ -274,8 +287,15 @@ app.use('/api/admin', admin);
 app.use((req, res) => res.status(404).send('Topilmadi'));
 app.use((err, req, res, next) => fail(res, 400, 'So‘rov noto‘g‘ri.')); // noto‘g‘ri JSON va h.k.
 
-app.listen(PORT, () => {
+const srv = app.listen(PORT, () => {
   console.log(`YasinDoors: http://localhost:${PORT}`);
   console.log(ADMIN_ENABLED ? `Admin panel: http://localhost:${PORT}/admin` : 'Admin panel O‘CHIQ: .env da kamida 8 belgili ADMIN_PASSWORD yozing.');
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) console.warn('OGOHLANTIRISH: .env da TELEGRAM_BOT_TOKEN va TELEGRAM_CHAT_ID to‘ldirilmagan — zakazlar admin panelda saqlanadi, lekin Telegramga yuborilmaydi.');
+});
+srv.on('error', e => {
+  if (e.code === 'EADDRINUSE') {
+    console.error(`\nXATO: ${PORT}-port band — ESKI server hali ishlab turibdi, shuning uchun yangi kod ishlamayapti.\n` +
+      'Yechim: barcha terminallarni yoping yoki Windows’da “taskkill /F /IM node.exe” ni bajaring, so‘ng “node server.js” ni qayta ishga tushiring.');
+  } else console.error('Server xatosi:', e.message);
+  process.exit(1);
 });

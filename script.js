@@ -68,12 +68,27 @@
   let cart = Object.fromEntries(Object.entries(savedCart && typeof savedCart === 'object' ? savedCart : {}).filter(([id, q]) => find(id) && Number.isInteger(q) && q > 0));
   let favs = Array.isArray(savedFavs) ? savedFavs.filter(find) : [];
 
+  /* Server manzili. Sayt Node server orqali ochilsa (localhost:3000 yoki hosting) — bir xil manzil.
+     “Live Server” yoki fayldan ochilgan bo‘lsa — localhost:3000 ga murojaat qilinadi. Boshqa manzil kerak bo‘lsa: window.YD_API = 'https://...' */
+  const API = window.YD_API !== undefined ? window.YD_API
+    : (['', 'localhost', '127.0.0.1'].includes(location.hostname) && location.port !== '3000' ? 'http://localhost:3000' : '');
+
+  /* Server tirikmi va yangimi? ('' = yaxshi, 'down' = ishlamayapti, 'old' = eski versiya ishlayapti) */
+  async function checkServer() {
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 3000);
+    try {
+      const r = await fetch(API + '/api/health', { signal: ctl.signal, cache: 'no-store' });
+      const d = r.ok ? await r.json().catch(() => null) : null;
+      return d && d.version >= 3 ? '' : 'old';
+    } catch { return 'down'; } finally { clearTimeout(timer); }
+  }
+
   /* ---------- 3b. Katalog serverdan (admin panel bilan bir xil mahsulot, narx va yetkazib berish).
      Server javob bermasa — yuqoridagi o‘rnatilgan ro‘yxat ishlayveradi ---------- */
   async function loadCatalog() {
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 2500);
     try {
-      const r = await fetch('/api/catalog', { signal: ctl.signal, cache: 'no-store' });
+      const r = await fetch(API + '/api/catalog', { signal: ctl.signal, cache: 'no-store' });
       const d = r.ok ? await r.json() : null;
       if (!d || !d.ok || !Array.isArray(d.products) || !d.products.length) return;
       PRODUCTS.splice(0, PRODUCTS.length, ...d.products);
@@ -280,6 +295,13 @@ ${detail}<rect x="116" y="56" width="168" height="324" fill="url(#s)"/>
       <div class="fl"><textarea class="field" id="o-note" name="note" placeholder=" " rows="3" maxlength="500"></textarea><label for="o-note">Qo‘shimcha izoh</label></div>
       <div class="notice" id="o-err" role="alert"></div><button class="btn btn--p" type="submit" id="orderBtn">Zakazni yuborish</button></form>`;
     openBox(); $('#o-name').focus();
+    checkServer().then(st => {     // zakaz serveri ishlamayotgan bo‘lsa, forma to‘ldirilmasdanoq aytamiz
+      const box = $('#o-err'); if (!st || !box) return;
+      box.innerHTML = ICON.x + '<span></span>';
+      $('span', box).textContent = st === 'down'
+        ? 'Zakaz serveri bilan aloqa yo‘q. Terminalda “node server.js” ishlab turganini tekshiring.'
+        : 'Eski server ishlab turibdi (yangi kod yuklanmagan). Barcha terminallarni yoping (Windows: “taskkill /F /IM node.exe”), so‘ng “node server.js” ni qayta ishga tushiring.';
+    });
     const f = $('#orderForm');
     const valid = bindValidation(f, { name: v => v.trim().length >= 2 || 'Ismingizni kiriting.', phone: phoneOk, address: v => v.trim().length >= 5 || 'Manzilni kiriting.' }, 'e-o-');
     f.addEventListener('submit', e => { e.preventDefault(); if (valid()) sendOrder(f); });
@@ -290,11 +312,13 @@ ${detail}<rect x="116" y="56" width="168" height="324" fill="url(#s)"/>
     btn.disabled = true; btn.textContent = 'Yuborilmoqda…'; $('#o-err').innerHTML = '';
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 15000);
     try {
-      const r = await fetch('/api/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
+      const r = await fetch(API + '/api/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
         body: JSON.stringify({ name: el.name.value, phone: el.phone.value, address: el.address.value, note: el.note.value, items, delivery: t.fee }) });
       const isJson = (r.headers.get('content-type') || '').includes('json');
       const d = isJson ? await r.json().catch(() => ({})) : null;
-      if (!d) throw Object.assign(new Error('no-api'), { hint: 'Zakaz serveri topilmadi. Saytni “node server.js” ni ishga tushirib, http://localhost:3000 orqali oching.' });
+      if (!d) throw Object.assign(new Error('no-api'), { hint: r.status === 404
+        ? 'Serverda zakaz manzili topilmadi: 3000-portda ESKI server ishlab turibdi. Barcha terminal oynalarini yoping (Windows: “taskkill /F /IM node.exe”), so‘ng “node server.js” ni qayta ishga tushiring.'
+        : `Server kutilmagan javob qaytardi (${r.status}). Saytni “node server.js” ni ishga tushirib, http://localhost:3000 orqali oching.` });
       if (!r.ok || !d.ok) throw Object.assign(new Error('rejected'), { hint: d.error || '' });
       cart = {}; commit();   // faqat muvaffaqiyatdan keyin savat tozalanadi
       $('#modalBox').innerHTML = `<button class="modal__x" data-act="close" aria-label="Yopish">${ICON.x}</button><div class="state">
