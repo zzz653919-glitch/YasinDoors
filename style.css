@@ -254,3 +254,15 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
 .cmpwrap h2{padding-right:56px}
 .cmpt{table-layout:fixed;min-width:520px}.cmpt tbody th{width:96px}.cmpt thead th a{display:block;overflow-wrap:anywhere}
 @media(max-width:600px){.cmpt th,.cmpt td{padding:10px 8px;font-size:14px}.cmpt tbody th{width:78px}.cmpimg{max-width:96px}.cmpwrap h2{font-size:22px}}
+/* telefon: katalogda qatorda 2 ta eshik */
+@media(max-width:600px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .card{border-radius:16px}.card:hover{transform:none}
+  .card__body{padding:11px 10px 12px;gap:4px}.card__body p{display:none}
+  .card__body h3{font-size:14.5px;line-height:1.25}.card .tag{font-size:10.5px;letter-spacing:.04em}
+  .card .price{font-size:14.5px;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px}.card .price s{font-size:12px}.card .price .disc{font-size:11px;padding:2px 6px}
+  .card__act{margin-top:6px}.card__act .btn{padding:0 8px;min-height:40px;font-size:13px;gap:5px}.card__act .btn.touch{display:none}
+  .card .pbadge{top:8px;left:8px;font-size:9.5px;padding:4px 8px;letter-spacing:.05em}
+  .card .fav{width:34px;height:34px;top:8px;right:8px}.card .fav.cmpb{top:48px}.card .fav .i{width:17px;height:17px}
+  .sk b{margin:12px 12px 6px}.sk u{margin:0 12px 14px}
+}
