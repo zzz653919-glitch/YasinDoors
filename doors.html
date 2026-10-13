@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MDF Eshiklar — YasinDoors</title>
   <meta name="description" content="YasinDoors MDF eshiklar katalogi.">
+  <meta name="theme-color" content="#a67443">
+  <meta property="og:type" content="website"><meta property="og:site_name" content="YasinDoors"><meta property="og:title" content="MDF Eshiklar — YasinDoors"><meta property="og:description" content="YasinDoors MDF eshiklar katalogi.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23a67443%27 stroke-width=%271.7%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Crect x=%276%27 y=%273%27 width=%2712%27 height=%2718%27 rx=%271.5%27/%3E%3Ccircle cx=%2715%27 cy=%2712%27 r=%27.8%27/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,12 +21,20 @@
     <section class="phero"><div class="container reveal"><p class="eyebrow">YasinDoors</p><h1>MDF Eshiklar</h1><p>Zamonaviy va klassik MDF eshiklar kolleksiyasi.</p></div></section>
     <section class="section"><div class="container">
       <div class="tools">
-        <div class="search"><label for="search" class="sr">MDF eshik qidirish</label><span data-icon="search"></span><input class="field" id="search" type="search" placeholder="MDF eshik qidirish..." autocomplete="off"></div>
+        <div class="search"><label for="search" class="sr">MDF eshik qidirish</label><span data-icon="search"></span><input class="field" id="search" type="search" placeholder="MDF eshik qidirish..." autocomplete="off" role="combobox" aria-expanded="false" aria-controls="suggest"><ul class="suggest" id="suggest" role="listbox" hidden></ul></div>
         <div class="sort"><label for="sort" class="sr">Saralash</label>
           <select class="select" id="sort"><option value="rec">Tavsiya etilgan</option><option value="asc">Narx: pastdan yuqoriga</option><option value="desc">Narx: yuqoridan pastga</option><option value="az">A-Z</option><option value="za">Z-A</option></select></div>
       </div>
       <div class="chips" id="chips" role="group" aria-label="Filterlar"></div>
-      <div class="grid" id="doorsGrid"></div>
+      <div class="frow">
+        <label>Rang<select class="select" id="fColor"></select></label>
+        <label>Uslub<select class="select" id="fStyle"></select></label>
+        <label>Narx dan (so‘m)<input class="field" id="fMin" type="number" min="0" step="100000" inputmode="numeric" placeholder="0"></label>
+        <label>Narx gacha (so‘m)<input class="field" id="fMax" type="number" min="0" step="100000" inputmode="numeric" placeholder="∞"></label>
+        <button class="btn btn--o btn--sm" id="fReset" type="button">Filtrni tozalash</button>
+      </div>
+      <div class="resline"><span id="resCount" aria-live="polite"></span></div>
+      <div class="grid" id="doorsGrid"><div class="sk"><i></i><b></b><u></u></div><div class="sk"><i></i><b></b><u></u></div><div class="sk"><i></i><b></b><u></u></div><div class="sk"><i></i><b></b><u></u></div><div class="sk"><i></i><b></b><u></u></div><div class="sk"><i></i><b></b><u></u></div></div>
     </div></section>
     <section class="cta" id="site-cta"></section>
   </main>

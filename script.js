@@ -402,12 +402,15 @@ ${detail}<rect x="116" y="56" width="168" height="324" fill="url(#s)"/>
     openBox(); $('.modal__x').focus();
   }
   function renderPage() {
-    if (page === 'home') { renderHome(); renderConfig(); }
+    try { renderPageInner(); } catch (e) { console.error(e); }
+    translateDom(document.querySelector('main'));
+  }
+  function renderPageInner() {
+    if (page === 'home' && $('#homeTabs')) { renderHome(); renderConfig(); }
     if (page === 'doors') renderDoors();
     if (page === 'product') renderPdp();
     if (page === 'favorites') { const l = PRODUCTS.filter(p => favs.includes(p.id)); $('#favGrid').innerHTML = l.length ? l.map(card).join('') : emptyBox('heart', 'Sevimli mahsulotlar hozircha yo‘q', 'O‘zingizga yoqqan eshiklarni saqlab qo‘ying.'); }
     if (page === 'cart') renderCart();
-    translateDom(document.querySelector('main'));
   }
 
   /* ---------- 9. Modal: tezkor ko‘rish ---------- */
@@ -606,7 +609,8 @@ ${detail}<rect x="116" y="56" width="168" height="324" fill="url(#s)"/>
   applyTheme(root.dataset.theme || 'light');
   initNav(); updateCounts(); renderPage(); translateDom(document.body); renderCmpBar();
   $$('[data-door]').forEach(el => { const p = find(el.dataset.door) || PRODUCTS[0]; if (p) el.src = doorImg(p); });
-  if (page === 'doors') initDoors();
-  if (page === 'contact') initContact();
+  const safe = f => { try { f(); } catch (e) { console.error(e); } };
+  if (page === 'doors') safe(initDoors);
+  if (page === 'contact') safe(initContact);
   initReveal();
 })();

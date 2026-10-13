@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aloqa — YasinDoors</title>
   <meta name="description" content="YasinDoors bilan bog‘laning.">
+  <meta name="theme-color" content="#a67443">
+  <meta property="og:type" content="website"><meta property="og:site_name" content="YasinDoors"><meta property="og:title" content="Aloqa — YasinDoors"><meta property="og:description" content="YasinDoors bilan bog‘laning.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23a67443%27 stroke-width=%271.7%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Crect x=%276%27 y=%273%27 width=%2712%27 height=%2718%27 rx=%271.5%27/%3E%3Ccircle cx=%2715%27 cy=%2712%27 r=%27.8%27/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,14 +21,16 @@
     <section class="phero"><div class="container reveal"><p class="eyebrow">YasinDoors</p><h1>Siz bilan bog‘lanishni istaymiz</h1><p>Savollaringiz bo‘lsa yoki eshik tanlashda yordam kerak bo‘lsa, bizga yozing.</p></div></section>
     <section class="section"><div class="container contact">
       <div class="reveal"><h2>Bog‘laning</h2>
-        <ul class="info"><li><span class="ico" data-icon="phone"></span><div><span class="t">Telefon</span><b>+998 XX XXX XX XX</b></div></li><li><span class="ico" data-icon="pin"></span><div><span class="t">Manzil</span><b>Shahar, ko‘cha, uy raqami</b></div></li><li><span class="ico" data-icon="clock"></span><div><span class="t">Ish vaqti</span><b>Du–Sha: 09:00 – 18:00</b></div></li><li><span class="ico" data-icon="mail"></span><div><span class="t">Email</span><b>info@example.com</b></div></li></ul>
-        <p class="note">Ma’lumotlar vaqtincha namuna sifatida berilgan.</p></div>
+        <ul class="info" id="contactInfo"></ul>
+        <p class="note" id="contactNote"></p></div>
       <form class="form reveal" id="contactForm" novalidate>
         <h2>Xabar yuborish</h2>
         <div class="fl"><input class="field" id="name" name="name" placeholder=" " autocomplete="name" maxlength="100"><label for="name">Ism</label><div class="err" id="e-name"></div></div>
         <div class="fl"><input class="field" id="phone" name="phone" type="tel" placeholder=" " autocomplete="tel" maxlength="30"><label for="phone">Telefon</label><div class="err" id="e-phone"></div></div>
         <div class="fl"><textarea class="field" id="message" name="message" rows="5" placeholder=" " maxlength="2000"></textarea><label for="message">Xabar</label><div class="err" id="e-message"></div></div>
-        <button type="submit" class="btn btn--p">Xabar yuborish <span data-icon="arrow"></span></button>
+        <div class="sr" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+        <div class="notice" id="cErr" role="alert"></div>
+        <button type="submit" class="btn btn--p" id="cBtn">Xabar yuborish <span data-icon="arrow"></span></button>
       </form>
     </div></section>
   </main>
