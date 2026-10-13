@@ -266,3 +266,11 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
   .card .fav{width:34px;height:34px;top:8px;right:8px}.card .fav.cmpb{top:48px}.card .fav .i{width:17px;height:17px}
   .sk b{margin:12px 12px 6px}.sk u{margin:0 12px 14px}
 }
+/* telefon: "Nega YasinDoors" va "Jarayon" ham qatorda 2 tadan */
+@media(max-width:600px){
+  .cards4,.timeline{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .box{padding:16px 14px;border-radius:16px}.box:hover{transform:none}.box h3{font-size:16px;margin:10px 0 6px}.box p{font-size:13.5px;line-height:1.45}
+  .ico{width:40px;height:40px;border-radius:12px}
+  .timeline li{padding:16px 10px;gap:8px;font-size:15px;border-radius:16px}.timeline li p{font-size:12.5px}
+  .timeline li:last-child:nth-child(odd){grid-column:1/-1}
+}
