@@ -490,13 +490,13 @@ ${detail}<rect x="116" y="56" width="168" height="324" fill="url(#s)"/>
     f.addEventListener('submit', e => { e.preventDefault(); if (valid()) sendOrder(f); });
   }
   async function sendOrder(f) {
-    const btn = $('#orderBtn'), t = totals(), el = f.elements;
+    const btn = $('#orderBtn'), tot = totals(), el = f.elements;
     const items = Object.keys(cart).map(id => ({ id: +id, qty: cart[id] }));   // narx serverda katalogdan olinadi
     btn.disabled = true; btn.textContent = 'Yuborilmoqda…'; $('#o-err').innerHTML = '';
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 15000);
     try {
       const r = await fetch('/api/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
-        body: JSON.stringify({ name: el.name.value, phone: el.phone.value, address: el.address.value, note: el.note.value, items, delivery: t.fee }) });
+        body: JSON.stringify({ name: el.name.value, phone: el.phone.value, address: el.address.value, note: el.note.value, items, delivery: tot.fee }) });
       const d = await r.json().catch(() => ({}));
       if (!r.ok || !d.ok) throw new Error(d.error || (r.status === 404 || r.status === 405 ? 'noserver' : 'order failed'));
       cart = {}; store.set('cfgNote', ''); commit();   // faqat muvaffaqiyatdan keyin savat tozalanadi
@@ -504,7 +504,8 @@ ${detail}<rect x="116" y="56" width="168" height="324" fill="url(#s)"/>
         <svg class="bigcheck" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l8 8 14-16"/></svg>
         <h2>Zakaz qabul qilindi</h2>${d.id ? `<p>Zakaz raqami: <b>${esc(d.id)}</b></p>` : ''}<p>Tez orada siz bilan bog‘lanamiz.</p><a class="btn btn--p" href="doors.html">Katalogga qaytish</a></div>`;
     } catch (err) {
-      const m = err && err.message, why = m === 'noserver' ? 'Zakaz serveri ishlamayapti (sayt faqat statik fayl sifatida joylangan).' : (m && m !== 'order failed' && m !== 'Failed to fetch' && m !== 'The user aborted a request.' ? m : '');
+      const m = err && err.message, net = !m || m === 'noserver' || m === 'order failed' || /fetch|abort|network|load failed/i.test(m);
+      const why = net ? 'Zakaz serveri bilan aloqa yo‘q: sayt Node serveri (node server.js) orqali ochilganini tekshiring. Vercel kabi statik hostingda zakaz ishlamaydi.' : m;
       $('#o-err').innerHTML = ICON.x + `<span>${t(ORDER_ERR)}${why ? ' ' + esc(why) : ''}</span>`;   // savat saqlanadi, qayta urinish mumkin
       btn.disabled = false; btn.textContent = 'Qayta urinish';
     } finally { clearTimeout(timer); }
