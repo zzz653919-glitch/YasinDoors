@@ -248,3 +248,9 @@ button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
 @media(max-width:768px){.fabs{bottom:calc(86px + env(safe-area-inset-bottom))}body:has(.cmpbar:not([hidden])) .fabs{bottom:calc(150px + env(safe-area-inset-bottom))}.cmpbar{bottom:62px}.cmpwrap{padding:26px 16px}.frow .select,.frow .field{flex:1}.frow label{flex:1 1 140px}
   .header .lang{height:34px;padding:0 9px}.tabsrow .chips{margin-inline:0}.promo__in{font-size:13px}}
 @media(max-width:480px){.dims{grid-template-columns:1fr}.frow .field[type=number]{width:100%}.thumbs button{width:60px}}
+/* tuzatish: img width/height atributlari aspect-ratio ni buzmasin */
+.row img,.cmpimg img{height:auto}
+.cmpimg{width:100%;max-width:130px}.cmpimg img{width:100%}
+.cmpwrap h2{padding-right:56px}
+.cmpt{table-layout:fixed;min-width:520px}.cmpt tbody th{width:96px}.cmpt thead th a{display:block;overflow-wrap:anywhere}
+@media(max-width:600px){.cmpt th,.cmpt td{padding:10px 8px;font-size:14px}.cmpt tbody th{width:78px}.cmpimg{max-width:96px}.cmpwrap h2{font-size:22px}}
