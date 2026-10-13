@@ -498,13 +498,14 @@ ${detail}<rect x="116" y="56" width="168" height="324" fill="url(#s)"/>
       const r = await fetch('/api/order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ctl.signal,
         body: JSON.stringify({ name: el.name.value, phone: el.phone.value, address: el.address.value, note: el.note.value, items, delivery: t.fee }) });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.ok) throw new Error('order failed');
+      if (!r.ok || !d.ok) throw new Error(d.error || (r.status === 404 || r.status === 405 ? 'noserver' : 'order failed'));
       cart = {}; store.set('cfgNote', ''); commit();   // faqat muvaffaqiyatdan keyin savat tozalanadi
       $('#modalBox').innerHTML = `<button class="modal__x" data-act="close" aria-label="Yopish">${ICON.x}</button><div class="state">
         <svg class="bigcheck" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26" cy="26" r="24"/><path d="M15 27l8 8 14-16"/></svg>
         <h2>Zakaz qabul qilindi</h2>${d.id ? `<p>Zakaz raqami: <b>${esc(d.id)}</b></p>` : ''}<p>Tez orada siz bilan bog‘lanamiz.</p><a class="btn btn--p" href="doors.html">Katalogga qaytish</a></div>`;
-    } catch {
-      $('#o-err').innerHTML = ICON.x + `<span>${ORDER_ERR}</span>`;   // savat saqlanadi, qayta urinish mumkin
+    } catch (err) {
+      const m = err && err.message, why = m === 'noserver' ? 'Zakaz serveri ishlamayapti (sayt faqat statik fayl sifatida joylangan).' : (m && m !== 'order failed' && m !== 'Failed to fetch' && m !== 'The user aborted a request.' ? m : '');
+      $('#o-err').innerHTML = ICON.x + `<span>${t(ORDER_ERR)}${why ? ' ' + esc(why) : ''}</span>`;   // savat saqlanadi, qayta urinish mumkin
       btn.disabled = false; btn.textContent = 'Qayta urinish';
     } finally { clearTimeout(timer); }
   }
